@@ -409,7 +409,7 @@ function hosting_ssl_get_keys($client = NULL, $ask_custom = FALSE) {
   $result = db_query($query, $args);
 
   while ($obj = $result->fetchObject()) {
-    if (count($obj->ssl_key)) {
+    if (strlen($obj->ssl_key)) {
       $keys[$obj->cid] = $obj->ssl_key;
     }
   }
