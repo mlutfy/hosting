@@ -646,13 +646,21 @@ function hosting_platform_validate($node, &$form) {
       );
     }
 
-    // Make sure the path is unique. Remote servers can't have the same path to a platform that is in use by another server.
-    $exists = hosting_platform_path_exists($node->publish_path);
+    // Make sure the path is unique. Remote servers can't have the same path to
+    // a platform that is in use by another server.
+    $exists = hosting_platform_path_exists($node->publish_path, isset($node->nid) ? $node->nid : NULL);
     if ($exists) {
-      form_set_error('publish_path',
-        t('Path is already in use by platform %name. Platform paths must be unique across all servers.',
-        array('%name' => $result->name))
-      );
+      // Ensure that the visitor has access to view the other platform.
+      if (($other_node = node_load($exists->nid)) && node_access('view', $other_node)) {
+        form_set_error('publish_path', t('Publish path is already in use by platform: <a href="@link" target="_blank">%name</a>. Platform paths must be unique across all servers.',
+          array(
+            '%name' => $other_node->title,
+            '@link' => url('node/' . $exists->nid),
+          )));
+      }
+      else {
+        form_set_error('publish_path', t('Publish path is already in use by another platform. Platform paths must be unique across all servers.'));
+      }
     }
 
     if (is_null($node->web_server)) {
@@ -662,21 +670,29 @@ function hosting_platform_validate($node, &$form) {
 }
 
 /**
- * Determine whether a given path has already been used with an existing
- * platform.
+ * Determine whether a given path has already been used with another platform.
+ *
+ * @param string $path
+ *   The path to check.
+ * @param int $exclude_nid
+ *   Optionally exclude this platform from the check.
+ *
+ * @return mixed
+ *   Either a result object or FALSE.
+ *   The result object will contain the nid and name of the platform that uses
+ *   the path.
  */
-function hosting_platform_path_exists($path) {
-  $result = db_query("SELECT n.title AS name
-    FROM {hosting_platform} AS h
-      INNER JOIN {node} AS n ON n.nid = h.nid
-    WHERE publish_path = :publish_path
-      AND h.status >= :h_status",
-    array(
-      ':publish_path' => hosting_path_normalize($path),
-      ':h_status' => HOSTING_PLATFORM_QUEUED,
-    )
-  )->fetch();
-  return $result;
+function hosting_platform_path_exists($path, $exclude_nid = NULL) {
+  $query = db_select('hosting_platform', 'h')
+    ->condition('h.publish_path', hosting_path_normalize($path))
+    ->condition('h.status', HOSTING_PLATFORM_LOCKED, '>=');
+  $query->innerJoin('node', 'n', 'n.nid = h.nid');
+  $query->addField('n', 'title', 'name');
+  $query->addField('n', 'nid');
+  if (!is_null($exclude_nid)) {
+    $query->condition('h.nid', $exclude_nid, '<>');
+  }
+  return $query->execute()->fetch();
 }
 
 /**
