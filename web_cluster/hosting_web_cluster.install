@@ -35,4 +35,3 @@ function hosting_web_cluster_schema() {
     ),
   );
 }
-
