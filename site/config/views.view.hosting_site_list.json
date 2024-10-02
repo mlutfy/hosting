@@ -1,0 +1,578 @@
+{
+    "_config_name": "views.view.hosting_site_list",
+    "name": "hosting_site_list",
+    "description": "Display a list of sites hosted in Aegir.",
+    "tag": "hosting_site",
+    "disabled": false,
+    "base_table": "node",
+    "human_name": "Hosting Site List",
+    "core": 6,
+    "display": {
+        "default": {
+            "display_title": "Defaults",
+            "display_plugin": "default",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "title": "Sites",
+                "use_ajax": true,
+                "use_more_always": false,
+                "access": {
+                    "type": "perm",
+                    "perm": "view site"
+                },
+                "cache": {
+                    "type": "none"
+                },
+                "exposed_form": {
+                    "type": "basic",
+                    "options": {
+                        "reset_button": true
+                    }
+                },
+                "pager": {
+                    "type": "full",
+                    "options": {
+                        "items_per_page": 25
+                    }
+                },
+                "style_plugin": "table",
+                "style_options": {
+                    "row_class": "[status]",
+                    "columns": {
+                        "views_bulk_operations": "views_bulk_operations",
+                        "status": "status",
+                        "title": "title",
+                        "title_3": "title_3",
+                        "created": "created",
+                        "title_2": "title_2",
+                        "verified": "verified"
+                    },
+                    "default": "-1",
+                    "info": {
+                        "views_bulk_operations": {
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "status": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title_3": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "created": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title_2": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "verified": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        }
+                    }
+                },
+                "exposed_block": true,
+                "relationships": {
+                    "profile": {
+                        "id": "profile",
+                        "table": "hosting_site",
+                        "field": "profile"
+                    },
+                    "platform": {
+                        "id": "platform",
+                        "table": "hosting_site",
+                        "field": "platform"
+                    },
+                    "client": {
+                        "id": "client",
+                        "table": "hosting_site",
+                        "field": "client"
+                    },
+                    "db_server": {
+                        "id": "db_server",
+                        "table": "hosting_site",
+                        "field": "db_server"
+                    }
+                },
+                "fields": {
+                    "views_bulk_operations": {
+                        "id": "views_bulk_operations",
+                        "table": "views_entity_node",
+                        "field": "views_bulk_operations",
+                        "label": "",
+                        "element_label_colon": false,
+                        "vbo_settings": {
+                            "display_type": "0",
+                            "enable_select_all_pages": 1,
+                            "force_single": 0,
+                            "entity_load_capacity": "10",
+                            "skip_batching": 1
+                        },
+                        "vbo_operations": {
+                            "action::hosting_site_backup_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 1,
+                                "label": "Backup"
+                            },
+                            "action::hosting_site_delete_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 1,
+                                "label": "Delete"
+                            },
+                            "action::hosting_site_disable_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 1,
+                                "label": "Disable"
+                            },
+                            "action::hosting_site_enable_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 1,
+                                "override_label": 1,
+                                "label": "Enable"
+                            },
+                            "action::hosting_site_verify_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 1,
+                                "override_label": 1,
+                                "label": "Verify"
+                            }
+                        }
+                    },
+                    "status": {
+                        "id": "status",
+                        "table": "hosting_site",
+                        "field": "status",
+                        "ui_name": "Class",
+                        "exclude": true,
+                        "element_label_colon": false,
+                        "status_mode": "class"
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title",
+                        "label": "Site",
+                        "exclude": true,
+                        "element_class": "hosting-status",
+                        "element_wrapper_class": "hosting-status"
+                    },
+                    "path": {
+                        "id": "path",
+                        "table": "node",
+                        "field": "path",
+                        "exclude": true
+                    },
+                    "canonical": {
+                        "id": "canonical",
+                        "table": "hosting_site",
+                        "field": "canonical",
+                        "label": "Site",
+                        "alter": {
+                            "make_link": true,
+                            "path": "[path]"
+                        },
+                        "element_class": "hosting-status",
+                        "element_label_class": "hosting-status"
+                    },
+                    "title_3": {
+                        "id": "title_3",
+                        "table": "node",
+                        "field": "title",
+                        "relationship": "profile",
+                        "label": "Profile"
+                    },
+                    "created": {
+                        "id": "created",
+                        "table": "node",
+                        "field": "created",
+                        "label": "Created",
+                        "date_format": "time ago"
+                    },
+                    "title_2": {
+                        "id": "title_2",
+                        "table": "node",
+                        "field": "title",
+                        "relationship": "platform",
+                        "label": "Platform",
+                        "alter": {
+                            "max_length": "20",
+                            "trim": true
+                        }
+                    },
+                    "verified": {
+                        "id": "verified",
+                        "table": "hosting_site",
+                        "field": "verified",
+                        "exclude": true
+                    }
+                },
+                "sorts": {
+                    "status": {
+                        "id": "status",
+                        "table": "hosting_site",
+                        "field": "status",
+                        "order": "DESC"
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title"
+                    }
+                },
+                "filters": {
+                    "type": {
+                        "id": "type",
+                        "table": "node",
+                        "field": "type",
+                        "value": {
+                            "site": "site"
+                        },
+                        "expose": {
+                            "operator": false
+                        }
+                    },
+                    "status": {
+                        "id": "status",
+                        "table": "hosting_site",
+                        "field": "status",
+                        "operator": "not in",
+                        "value": {
+                            "-2": "-2"
+                        },
+                        "expose": {
+                            "operator": false
+                        }
+                    },
+                    "status_1": {
+                        "id": "status_1",
+                        "table": "node",
+                        "field": "status",
+                        "value": "1"
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title",
+                        "operator": "contains",
+                        "exposed": true,
+                        "expose": {
+                            "operator_id": "title_op",
+                            "label": "Site",
+                            "operator": "title_op",
+                            "identifier": "title"
+                        }
+                    },
+                    "title_1": {
+                        "id": "title_1",
+                        "table": "node",
+                        "field": "title",
+                        "relationship": "profile",
+                        "operator": "contains",
+                        "exposed": true,
+                        "expose": {
+                            "operator_id": "title_1_op",
+                            "label": "Profile",
+                            "operator": "title_1_op",
+                            "identifier": "title_1"
+                        }
+                    }
+                }
+            }
+        },
+        "page_sites": {
+            "display_title": "Site List Page",
+            "display_plugin": "page",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "defaults": {
+                    "access": false,
+                    "style_plugin": false,
+                    "style_options": false,
+                    "row_plugin": false,
+                    "row_options": false,
+                    "empty": false
+                },
+                "access": {
+                    "type": "perm",
+                    "perm": "create site"
+                },
+                "style_plugin": "table",
+                "style_options": {
+                    "row_class": "[status]",
+                    "columns": {
+                        "status": "status",
+                        "title": "title",
+                        "title_3": "title_3",
+                        "created": "created",
+                        "title_2": "title_2"
+                    },
+                    "default": "-1",
+                    "info": {
+                        "status": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title_3": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "created": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title_2": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        }
+                    }
+                },
+                "empty": {
+                    "area_text_custom": {
+                        "id": "area_text_custom",
+                        "table": "views",
+                        "field": "area_text_custom",
+                        "empty": true,
+                        "content": "No sites have been created. <a href=\"/node/add/site\">Click here</a> to add one."
+                    }
+                },
+                "path": "hosting/sites",
+                "menu": {
+                    "type": "normal",
+                    "title": "Sites",
+                    "description": "List of sites",
+                    "weight": "1",
+                    "name": "main-menu",
+                    "context": 0,
+                    "context_only_inline": 0
+                }
+            }
+        },
+        "block_sites": {
+            "display_title": "Site List Block",
+            "display_plugin": "block",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "defaults": {
+                    "empty": false,
+                    "arguments": false,
+                    "filter_groups": false,
+                    "filters": false
+                },
+                "empty": {
+                    "area_text_custom": {
+                        "id": "area_text_custom",
+                        "table": "views",
+                        "field": "area_text_custom",
+                        "empty": true,
+                        "content": "No sites have been created for this client. <a href=\"/node/!1/platform-add-site\">Click here</a> to add one.",
+                        "tokenize": true
+                    }
+                },
+                "arguments": {
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "relationship": "client",
+                        "default_action": "default",
+                        "title_enable": true,
+                        "title": "Sites managed by this client",
+                        "default_argument_type": "node",
+                        "summary": {
+                            "number_of_records": "0",
+                            "format": "default_summary"
+                        },
+                        "summary_options": {
+                            "items_per_page": "25"
+                        },
+                        "specify_validation": true,
+                        "validate": {
+                            "type": "node"
+                        },
+                        "validate_options": {
+                            "types": {
+                                "client": "client"
+                            },
+                            "access": true
+                        }
+                    },
+                    "nid_1": {
+                        "id": "nid_1",
+                        "table": "node",
+                        "field": "nid",
+                        "relationship": "platform",
+                        "default_action": "default",
+                        "title_enable": true,
+                        "title": "Sites installed on this platform",
+                        "default_argument_type": "node",
+                        "summary": {
+                            "number_of_records": "0",
+                            "format": "default_summary"
+                        },
+                        "summary_options": {
+                            "items_per_page": "25"
+                        },
+                        "specify_validation": true,
+                        "validate": {
+                            "type": "node"
+                        },
+                        "validate_options": {
+                            "types": {
+                                "platform": "platform"
+                            },
+                            "access": true
+                        }
+                    },
+                    "nid_2": {
+                        "id": "nid_2",
+                        "table": "node",
+                        "field": "nid",
+                        "relationship": "profile",
+                        "default_action": "default",
+                        "title_enable": true,
+                        "title": "Sites installed with this profile",
+                        "default_argument_type": "node",
+                        "summary": {
+                            "number_of_records": "0",
+                            "format": "default_summary"
+                        },
+                        "summary_options": {
+                            "items_per_page": "25"
+                        },
+                        "specify_validation": true,
+                        "validate": {
+                            "type": "node"
+                        },
+                        "validate_options": {
+                            "types": {
+                                "package": "package"
+                            },
+                            "access": true
+                        }
+                    },
+                    "nid_3": {
+                        "id": "nid_3",
+                        "table": "node",
+                        "field": "nid",
+                        "relationship": "db_server",
+                        "default_action": "default",
+                        "title_enable": true,
+                        "title": "Sites installed on this database server",
+                        "default_argument_type": "node",
+                        "summary": {
+                            "number_of_records": "0",
+                            "format": "default_summary"
+                        },
+                        "summary_options": {
+                            "items_per_page": "25"
+                        },
+                        "specify_validation": true,
+                        "validate": {
+                            "type": "node"
+                        },
+                        "validate_options": {
+                            "types": {
+                                "server": "server"
+                            },
+                            "access": true
+                        }
+                    }
+                },
+                "filters": {
+                    "type": {
+                        "id": "type",
+                        "table": "node",
+                        "field": "type",
+                        "value": {
+                            "site": "site"
+                        },
+                        "expose": {
+                            "operator": false
+                        }
+                    },
+                    "status": {
+                        "id": "status",
+                        "table": "hosting_site",
+                        "field": "status",
+                        "operator": "not in",
+                        "value": {
+                            "-2": "-2"
+                        },
+                        "expose": {
+                            "operator": false
+                        }
+                    },
+                    "status_1": {
+                        "id": "status_1",
+                        "table": "node",
+                        "field": "status",
+                        "value": "1"
+                    }
+                }
+            }
+        }
+    }
+}
