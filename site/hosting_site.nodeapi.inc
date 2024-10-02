@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_node_info().
+ * Implements hook_node_info() for Drupal7.
  */
 function hosting_site_node_info() {
   $types["site"] = array(

@@ -74,7 +74,7 @@ function hosting_platform_menu() {
 }
 
 /**
- * Implements hook_node_info().
+ * Implements hook_node_info() for Drupal7.
  */
 function hosting_platform_node_info() {
   $types["platform"] = array(

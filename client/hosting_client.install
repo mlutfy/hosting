@@ -88,4 +88,23 @@ function hosting_client_install() {
       'client' => 1,
     ))
     ->execute();
+
+  if (!defined('BACKDROP_ROOT')) {
+    return;
+  }
+  // See https://docs.backdropcms.org/change-records/hook_node_info-removed
+  $type = [
+    "name" => t('Client'),
+    'base' => 'hosting_client',
+    "has_title" => TRUE,
+    "title_label" => 'Client name',
+    "description" => hosting_node_help("client"),
+    "has_body" => 0,
+    "body_label" => '',
+    "min_word_count" => 0,
+    // Lock the machine name
+    'locked' => TRUE,
+  ];
+  $type = node_type_set_defaults($type);
+  node_type_save($type);
 }

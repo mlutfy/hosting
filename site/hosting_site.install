@@ -6,6 +6,31 @@
  */
 
 /**
+ * Implements hook_install() for Backdrop
+ */
+function hosting_site_install() {
+  if (!defined('BACKDROP_ROOT')) {
+    return;
+  }
+  // See https://docs.backdropcms.org/change-records/hook_node_info-removed
+  $type = [
+    "type" => 'site',
+    "name" => 'Site',
+    'base' => 'hosting_site',
+    "has_title" => TRUE,
+    "title_label" => 'Domain name',
+    "description" => hosting_node_help("site"),
+    "has_body" => 0,
+    "body_label" => '',
+    "min_word_count" => 0,
+    // Lock the machine name
+    'locked' => TRUE,
+  ];
+  $type = node_type_set_defaults($type);
+  node_type_save($type);
+}
+
+/**
  * Implements hook_schema().
  */
 function hosting_site_schema() {

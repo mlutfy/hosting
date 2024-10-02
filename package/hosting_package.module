@@ -20,10 +20,9 @@ function _hosting_package_types() {
 }
 
 /**
- * Implements hook_node_info().
+ * Implements hook_node_info() for Drupal7.
  */
 function hosting_package_node_info() {
-  #package management
   $types["package"] =  array(
     "type" => 'package',
     "name" => t('Package'),
@@ -35,7 +34,6 @@ function hosting_package_node_info() {
     "body_label" => '',
     "min_word_count" => 0,
   );
-
   return $types;
 }
 
