@@ -387,8 +387,15 @@ function _hosting_language_names($languages) {
  */
 function _hosting_language_name($language) {
   $name = $language;
-  include_once DRUPAL_ROOT . '/includes/iso.inc';
-  $locales = _locale_get_predefined_list();
+  $locales = [];
+  if (defined('BACKDROP_ROOT')) {
+    include_once BACKDROP_ROOT . '/core/includes/standard.inc';
+    $locales = standard_language_list();
+  }
+  else {
+    include_once DRUPAL_ROOT . '/includes/iso.inc';
+    $locales = _locale_get_predefined_list();
+  }
   if (isset($locales[$language])) {
     $name = $locales[$language][0];
     if (isset($locales[$language][1])) {
