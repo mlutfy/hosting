@@ -408,10 +408,6 @@ function hosting_nodeapi(&$node, $op, $arg1 = NULL, $arg2 = NULL) {
  */
 function hosting_permission() {
   return array(
-    'access hosting wizard' => array(
-      'title' => t('access hosting wizard'),
-      'description' => t("TODO Remove 'access hosting wizard', as it is not checked anywhere."),
-    ),
     'administer hosting queues' => array(
       'title' => t('administer hosting queues'),
       'description' => t('Configure the frequency that cron, backup and task events are process.'),
