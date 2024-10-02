@@ -2,6 +2,6 @@ name = Web Server
 description = Allow hostmaster to configure web servers.
 package = Hosting
 dependencies[] = hosting
-
 core = 7.x
+backdrop = 1.x
 files[] = hosting_web_server.service.inc

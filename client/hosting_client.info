@@ -2,7 +2,7 @@ name = Client
 description = Allow Hostmaster to configure clients.
 package = Hosting
 dependencies[] = hosting
-
 core = 7.x
+backdrop = 1.x
 
 files[] = 'hosting_client.access.inc'

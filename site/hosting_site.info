@@ -4,6 +4,7 @@ package = Hosting
 dependencies[] = hosting
 dependencies[] = hosting_client
 core = 7.x
+backdrop = 1.x
 
 files[] = includes/views/handlers/hosting_site_handler_field_canonical.inc
 files[] = includes/views/handlers/hosting_site_handler_field_language.inc

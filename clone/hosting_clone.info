@@ -5,4 +5,4 @@ dependencies[] = hosting
 dependencies[] = hosting_migrate
 
 core = 7.x
-
+backdrop = 1.x

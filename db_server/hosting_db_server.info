@@ -4,5 +4,7 @@ package = Hosting
 dependencies[] = hosting
 
 core = 7.x
+backdrop = 1.x
+
 files[] = hosting_db_server.service.inc
 files[] = hosting_db_server_handler_filter_db_server_type.inc

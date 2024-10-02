@@ -9,3 +9,4 @@ files[] = includes/views/handlers/hosting_platform_handler_field_sites.inc
 files[] = includes/views/handlers/hosting_platform_handler_field_status.inc
 
 core = 7.x
+backdrop = 1.x

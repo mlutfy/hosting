@@ -2,7 +2,7 @@ name = Hosting example
 description = Contains example implementations of the Hosting API.
 package = Hosting Examples
 dependencies[] = hosting
-
 core = 7.x
+backdrop = 1.x
 
 files[] = hosting_example.service.inc

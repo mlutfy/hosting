@@ -3,6 +3,7 @@ description = Allow Hostmaster to keep track of tasks that have been processed o
 package = Hosting
 dependencies[] = hosting
 core = 7.x
+backdrop = 1.x
 
 files[] = includes/views/handlers/hosting_task_handler_field_status.inc
 files[] = includes/views/handlers/hosting_task_handler_filter_type.inc

@@ -3,7 +3,7 @@ description = Allow hostmaster to configure web servers with SSL support. (LEGAC
 package = Hosting
 dependencies[] = hosting
 dependencies[] = hosting_web_server
-
 core = 7.x
+backdrop = 1.x
 
 files[] = hosting_ssl.service.inc

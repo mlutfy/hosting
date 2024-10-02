@@ -2,8 +2,8 @@ name = Server
 description = Allow hostmaster to configure servers.
 package = Hosting
 dependencies[] = hosting
-
 core = 7.x
+backdrop = 1.x
 
 files[] = hosting_server.service.inc
 files[] = hosting_server.test

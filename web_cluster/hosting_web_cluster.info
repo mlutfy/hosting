@@ -4,5 +4,6 @@ package = Hosting
 dependencies[] = hosting_web_server
 
 core = 7.x
+backdrop = 1.x
 
 files[] = hosting_web_cluster.service.inc
