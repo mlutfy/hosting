@@ -371,7 +371,7 @@ function hosting_task_menu_access_csrf($node, $task) {
 }
 
 /**
- * Implements hook_node_info().
+ * Implements hook_node_info() for Drupal7.
  */
 function hosting_task_node_info() {
   $types["task"] = array(

@@ -1,0 +1,394 @@
+{
+    "_config_name": "views.view.hosting_platform_list",
+    "name": "hosting_platform_list",
+    "description": "Display a list of platforms in Aegir.",
+    "tag": "hosting_platform",
+    "disabled": false,
+    "base_table": "node",
+    "human_name": "Hosting Platform List",
+    "core": 6,
+    "display": {
+        "default": {
+            "display_title": "Defaults",
+            "display_plugin": "default",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "title": "Platforms",
+                "use_ajax": true,
+                "use_more_always": false,
+                "access": {
+                    "type": "perm",
+                    "perm": "view platform"
+                },
+                "cache": {
+                    "type": "none"
+                },
+                "exposed_form": {
+                    "type": "basic"
+                },
+                "pager": {
+                    "type": "full",
+                    "options": {
+                        "items_per_page": "25",
+                        "offset": "0",
+                        "id": "0"
+                    }
+                },
+                "style_plugin": "table",
+                "style_options": {
+                    "row_class": "[status]",
+                    "columns": {
+                        "status": "status",
+                        "title": "title",
+                        "release": "release",
+                        "title_1": "title_1",
+                        "verified": "verified",
+                        "sites": "sites"
+                    },
+                    "default": "-1",
+                    "info": {
+                        "status": {
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "release": {
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title_1": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "verified": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "sites": {
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        }
+                    }
+                },
+                "relationships": {
+                    "web_server": {
+                        "id": "web_server",
+                        "table": "hosting_platform",
+                        "field": "web_server"
+                    }
+                },
+                "fields": {
+                    "views_bulk_operations": {
+                        "id": "views_bulk_operations",
+                        "table": "node",
+                        "field": "views_bulk_operations",
+                        "label": "",
+                        "element_label_colon": false,
+                        "vbo_settings": {
+                            "display_type": "0",
+                            "enable_select_all_pages": 1,
+                            "force_single": 0,
+                            "skip_batching": 1,
+                            "entity_load_capacity": "10"
+                        },
+                        "vbo_operations": {
+                            "action::node_assign_owner_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::views_bulk_operations_delete_item": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::views_bulk_operations_delete_revision": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::views_bulk_operations_script_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::node_make_sticky_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::node_make_unsticky_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::views_bulk_operations_modify_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": "",
+                                "settings": {
+                                    "show_all_tokens": 1,
+                                    "display_values": {
+                                        "_all_": "_all_"
+                                    }
+                                }
+                            },
+                            "action::views_bulk_operations_argument_selector_action": {
+                                "selected": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": "",
+                                "settings": {
+                                    "url": ""
+                                }
+                            },
+                            "action::hosting_platform_delete_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 1,
+                                "label": "Delete"
+                            },
+                            "action::hosting_platform_lock_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 1,
+                                "override_label": 1,
+                                "label": "Lock"
+                            },
+                            "action::hosting_platform_unlock_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 1,
+                                "override_label": 1,
+                                "label": "Unlock"
+                            },
+                            "action::hosting_platform_verify_action": {
+                                "selected": 1,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 1,
+                                "override_label": 1,
+                                "label": "Verify"
+                            },
+                            "action::node_promote_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::node_publish_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::node_unpromote_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::node_save_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::system_send_email_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::node_unpublish_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            },
+                            "action::node_unpublish_by_keyword_action": {
+                                "selected": 0,
+                                "postpone_processing": 0,
+                                "skip_confirmation": 0,
+                                "override_label": 0,
+                                "label": ""
+                            }
+                        }
+                    },
+                    "status": {
+                        "id": "status",
+                        "table": "hosting_platform",
+                        "field": "status",
+                        "ui_name": "Class",
+                        "exclude": true,
+                        "status_mode": "class"
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title",
+                        "label": "Platform",
+                        "element_class": "hosting-status"
+                    },
+                    "release": {
+                        "id": "release",
+                        "table": "hosting_platform",
+                        "field": "release"
+                    },
+                    "title_1": {
+                        "id": "title_1",
+                        "table": "node",
+                        "field": "title",
+                        "relationship": "web_server",
+                        "label": "Server"
+                    },
+                    "verified": {
+                        "id": "verified",
+                        "table": "hosting_platform",
+                        "field": "verified",
+                        "label": "Verified",
+                        "date_format": "time ago"
+                    },
+                    "sites": {
+                        "id": "sites",
+                        "table": "hosting_platform",
+                        "field": "sites"
+                    }
+                },
+                "sorts": {
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title"
+                    }
+                },
+                "arguments": {
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "style_plugin": "default_summary",
+                        "default_argument_type": "fixed"
+                    }
+                },
+                "filters": {
+                    "type": {
+                        "id": "type",
+                        "table": "node",
+                        "field": "type",
+                        "value": {
+                            "platform": "platform"
+                        }
+                    },
+                    "status": {
+                        "id": "status",
+                        "table": "node",
+                        "field": "status",
+                        "value": "1"
+                    },
+                    "status_1": {
+                        "id": "status_1",
+                        "table": "hosting_platform",
+                        "field": "status",
+                        "operator": "!=",
+                        "value": {
+                            "value": "-2"
+                        }
+                    }
+                }
+            }
+        },
+        "page_platforms": {
+            "display_title": "Page",
+            "display_plugin": "page",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "defaults": {
+                    "access": false
+                },
+                "access": {
+                    "type": "perm",
+                    "perm": "view platform"
+                },
+                "path": "hosting/platforms",
+                "menu": {
+                    "type": "normal",
+                    "title": "Platforms",
+                    "description": "List of platforms",
+                    "weight": "2",
+                    "name": "main-menu",
+                    "context": 0,
+                    "context_only_inline": 0
+                }
+            }
+        },
+        "block_1": {
+            "display_title": "Block: Server",
+            "display_plugin": "block",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "defaults": {
+                    "arguments": false
+                },
+                "arguments": {
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "relationship": "web_server",
+                        "default_action": "default",
+                        "style_plugin": "default_summary",
+                        "default_argument_type": "node",
+                        "default_argument_skip_url": 0,
+                        "break_phrase": 0,
+                        "not": 0
+                    }
+                }
+            }
+        }
+    }
+}

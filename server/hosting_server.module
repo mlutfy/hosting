@@ -83,7 +83,7 @@ function _hosting_server_list_class($status) {
 }
 
 /**
- * Implements hook_node_info().
+ * Implements hook_node_info() for Drupal7.
  */
 function hosting_server_node_info() {
   $types["server"] = array(

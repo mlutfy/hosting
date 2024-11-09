@@ -4,7 +4,6 @@
  * Install, update and uninstall functions for the hosting_site_data module.
  */
 
-
 /**
  * Implements hook_schema().
  */

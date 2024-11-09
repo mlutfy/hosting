@@ -34,6 +34,18 @@ if (module_exists('hosting_quota')) {
 }
 
 /**
+ * Implements hook_autoload_info() for Backdrop.
+ */
+function hosting_site_autoload_info() {
+  return [
+    'hosting_site_handler_field_canonical' => 'includes/views/handlers/hosting_site_handler_field_canonical.inc',
+    'hosting_site_handler_field_language' => 'includes/views/handlers/hosting_site_handler_field_language.inc',
+    'hosting_site_handler_field_status' => 'includes/views/handlers/hosting_site_handler_field_status.inc',
+    'hosting_site_plugin_access' => 'includes/views/plugins/hosting_site_plugin_access.inc',
+  ];
+}
+
+/**
  * Implements hook_menu().
  */
 function hosting_site_menu() {

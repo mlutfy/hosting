@@ -25,7 +25,7 @@ function hosting_client_init() {
 define('HOSTING_CLIENT_MAX_GROUP_LENGTH', 16);
 
 /**
- * Implements hook_node_info().
+ * Implements hook_node_info() for Drupal7.
  */
 function hosting_client_node_info() {
   $types["client"] = array(

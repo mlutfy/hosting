@@ -20,10 +20,9 @@ function _hosting_package_types() {
 }
 
 /**
- * Implements hook_node_info().
+ * Implements hook_node_info() for Drupal7.
  */
 function hosting_package_node_info() {
-  #package management
   $types["package"] =  array(
     "type" => 'package',
     "name" => t('Package'),
@@ -35,7 +34,6 @@ function hosting_package_node_info() {
     "body_label" => '',
     "min_word_count" => 0,
   );
-
   return $types;
 }
 
@@ -389,8 +387,15 @@ function _hosting_language_names($languages) {
  */
 function _hosting_language_name($language) {
   $name = $language;
-  include_once DRUPAL_ROOT . '/includes/iso.inc';
-  $locales = _locale_get_predefined_list();
+  $locales = [];
+  if (defined('BACKDROP_ROOT')) {
+    include_once BACKDROP_ROOT . '/core/includes/standard.inc';
+    $locales = standard_language_list();
+  }
+  else {
+    include_once DRUPAL_ROOT . '/includes/iso.inc';
+    $locales = _locale_get_predefined_list();
+  }
   if (isset($locales[$language])) {
     $name = $locales[$language][0];
     if (isset($locales[$language][1])) {

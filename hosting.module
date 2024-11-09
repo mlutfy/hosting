@@ -68,6 +68,16 @@ include_once dirname(__FILE__) . '/hosting.queues.inc';
 include_once dirname(__FILE__) . '/hosting.features.inc';
 
 /**
+ * Implements hook_autoload_info() for Backdrop.
+ */
+function hosting_autoload_info() {
+  return [
+    'hosting_field_handler_interval' => 'includes/views/handlers/hosting_field_handler_interval.inc',
+    'hosting_field_handler_status' => 'includes/views/handlers/hosting_field_handler_status.inc',
+  ];
+}
+
+/**
  * Implements hook_menu().
  */
 function hosting_menu() {
@@ -408,10 +418,6 @@ function hosting_nodeapi(&$node, $op, $arg1 = NULL, $arg2 = NULL) {
  */
 function hosting_permission() {
   return array(
-    'access hosting wizard' => array(
-      'title' => t('access hosting wizard'),
-      'description' => t("TODO Remove 'access hosting wizard', as it is not checked anywhere."),
-    ),
     'administer hosting queues' => array(
       'title' => t('administer hosting queues'),
       'description' => t('Configure the frequency that cron, backup and task events are process.'),
