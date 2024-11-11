@@ -6,6 +6,13 @@ backdrop = 1.x
 
 dependencies[] = views
 dependencies[] = views_bulk_operations
+dependencies[] = hosting_platform
+dependencies[] = hosting_site
+dependencies[] = hosting_task
+dependencies[] = hosting_db_server
+dependencies[] = hosting_migrate
+dependencies[] = hosting_clone
+dependencies[] = hosting_alias
 
 files[] = includes/views/handlers/hosting_field_handler_interval.inc
 files[] = includes/views/handlers/hosting_field_handler_status.inc
