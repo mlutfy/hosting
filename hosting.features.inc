@@ -400,7 +400,12 @@ function hosting_feature_role_perms_table($form, &$form_table, $role_perms) {
  */
 function hosting_features_enable($features, $rebuild = TRUE, $enable = TRUE) {
   if (count($features)) {
-    include_once dirname(__FILE__) . '/includes/install.inc';
+    if (defined('BACKDROP_ROOT')) {
+      include_once 'core/includes/install.inc';
+    }
+    else {
+      include_once 'includes/install.inc';
+    }
     $all_features = hosting_get_features();
     $titles = array();
     foreach ($features as $feature) {
@@ -451,7 +456,12 @@ function hosting_features_disable($disable, $rebuild = TRUE, $disable_module = T
       '%feature' => implode(", ", $disable),
       '!plural' => count($disable) > 1 ? 's' : '',
     )));
-    include_once 'includes/install.inc';
+    if (defined('BACKDROP_ROOT')) {
+      include_once 'core/includes/install.inc';
+    }
+    else {
+      include_once 'includes/install.inc';
+    }
     if ($disable_module) {
       module_disable(array_keys($disable));
     }
