@@ -400,9 +400,7 @@ function hosting_feature_role_perms_table($form, &$form_table, $role_perms) {
  */
 function hosting_features_enable($features, $rebuild = TRUE, $enable = TRUE) {
   if (count($features)) {
-
-    include_once 'includes/install.inc';
-
+    include_once dirname(__FILE__) . '/includes/install.inc';
     $all_features = hosting_get_features();
     $titles = array();
     foreach ($features as $feature) {
