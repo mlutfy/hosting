@@ -21,6 +21,7 @@ function _hosting_package_types() {
 
 /**
  * Implements hook_node_info() for Drupal7.
+ * @deprecated
  */
 function hosting_package_node_info() {
   $types["package"] =  array(
@@ -29,7 +30,7 @@ function hosting_package_node_info() {
     'base' => 'hosting_package',
     "has_title" => FALSE,
     "title_label" => '',
-    "description" => hosting_node_help("package"),
+    "description" => '',
     "has_body" => 0,
     "body_label" => '',
     "min_word_count" => 0,

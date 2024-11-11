@@ -98,7 +98,7 @@ function hosting_client_install() {
     'base' => 'hosting_client',
     "has_title" => TRUE,
     "title_label" => 'Client name',
-    "description" => hosting_node_help("client"),
+    "description" => t("<strong>The person or group that runs the site.</strong>\nThis information is usually required for billing and access purposes, to ensure that only certain people are able to view the information for sites they run. If you do not intend on having more than one client access the system, you will not need to create any additional clients for your purposes."),
     "has_body" => 0,
     "body_label" => '',
     "min_word_count" => 0,

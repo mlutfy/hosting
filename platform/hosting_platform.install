@@ -18,7 +18,7 @@ function hosting_platform_install() {
     'base' => 'hosting_platform',
     "has_title" => TRUE,
     "title_label" => t('Name'),
-    "description" => hosting_node_help("platform"),
+    "description" => t("<strong>The file system location on a specific web server on which to publish sites.</strong>\nMultiple platforms can co-exist on the same web server, and need to do so for upgrades to be managed, as this is accomplished by migrating the site between platforms. Platforms are most commonly built for specific releases of Drupal."),
     "has_body" => 0,
     "body_label" => '',
     "min_word_count" => 0,

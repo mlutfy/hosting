@@ -372,6 +372,7 @@ function hosting_task_menu_access_csrf($node, $task) {
 
 /**
  * Implements hook_node_info() for Drupal7.
+ * @deprecated
  */
 function hosting_task_node_info() {
   $types["task"] = array(
@@ -380,7 +381,7 @@ function hosting_task_node_info() {
     'base' => 'hosting_task',
     "has_title" => FALSE,
     "title_label" => '',
-    "description" => hosting_node_help("task"),
+    "description" => t("<strong>The mechanism whereby Hostmaster keeps track of all changes that occur to the system.</strong>\nEach task acts as a command for the back-end, and contains a full log of all changes that have occurred. If a task should fail, the administrator will be notified with an explanation of exactly what went wrong, and how to fix it."),
     "has_body" => 0,
     "body_label" => '',
     "min_word_count" => 0,

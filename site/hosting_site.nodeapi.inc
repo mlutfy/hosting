@@ -7,6 +7,7 @@
 
 /**
  * Implements hook_node_info() for Drupal7.
+ * @deprecated
  */
 function hosting_site_node_info() {
   $types["site"] = array(
@@ -15,7 +16,7 @@ function hosting_site_node_info() {
     'base' => 'hosting_site',
     "has_title" => TRUE,
     "title_label" => 'Domain name',
-    "description" => hosting_node_help("site"),
+    "description" => t("<strong>An instance of a hosted site.</strong>\nIt contains information relating to the site, most notably the domain name, database server and platform it is being published on. A site may also have several aliases for additional domains the site needs to be accessible on."),
     "has_body" => 0,
     "body_label" => '',
     "min_word_count" => 0,
