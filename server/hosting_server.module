@@ -716,11 +716,6 @@ function hosting_server_view($node, $view_mode, $langcode = NULL) {
         '#weight' => -20,
       );
 
-      // aegir-on-backdrop#4 Fix weird missing class definition
-      // https://stackoverflow.com/a/1173769
-      if (get_class($service) == '__PHP_Incomplete_Class') {
-        $service = unserialize(serialize($service));
-      }
       $service->view($node->content['info'][$name]);
     }
   }

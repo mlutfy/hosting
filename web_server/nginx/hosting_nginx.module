@@ -12,3 +12,9 @@ function hosting_nginx_hosting_service() {
     'nginx' => 'http',
   );
 }
+
+function hosting_nginx_autoload_info() {
+  return [
+    'hostingService_http_nginx' => 'hosting_nginx.service.inc',
+  ];
+}
