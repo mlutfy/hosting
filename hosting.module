@@ -1120,7 +1120,12 @@ function hosting_context_register($nid, $name) {
   // We include the file instead of enabling the module,
   // because we do not want the overhead of having all the
   // path UI stuff on nodes.
-  require_once DRUPAL_ROOT . '/modules/path/path.module';
+  if (defined('BACKDROP_ROOT')) {
+    require_once BACKDROP_ROOT . '/core//modules/path/path.module';
+  }
+  else {
+    require_once DRUPAL_ROOT . '/modules/path/path.module';
+  }
 
   // Delete an existing alias,
   // could be left behind after migrating a site from this name.
