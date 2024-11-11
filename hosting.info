@@ -8,6 +8,7 @@ dependencies[] = views
 dependencies[] = views_bulk_operations
 dependencies[] = hosting_platform
 dependencies[] = hosting_site
+dependencies[] = hosting_server
 dependencies[] = hosting_task
 dependencies[] = hosting_db_server
 dependencies[] = hosting_migrate
