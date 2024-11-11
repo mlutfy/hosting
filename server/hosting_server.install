@@ -19,7 +19,7 @@ function hosting_server_install() {
     'base' => 'hosting_server',
     "has_title" => TRUE,
     "title_label" => t('Hostname'),
-    "description" => t("<strong>The physical machine which will provide various services to your site.</strong>\n Each server can have multiple services associated to it. To host a site you require a database service and a web service, which can either be provided by a single or multiple servers.")
+    "description" => t("<strong>The physical machine which will provide various services to your site.</strong>\n Each server can have multiple services associated to it. To host a site you require a database service and a web service, which can either be provided by a single or multiple servers."),
     "has_body" => 0,
     "body_label" => '',
     "min_word_count" => 0,
