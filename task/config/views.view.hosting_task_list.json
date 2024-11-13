@@ -1,0 +1,648 @@
+{
+    "_config_name": "views.view.hosting_task_list",
+    "name": "hosting_task_list",
+    "description": "Display a list of tasks in Aegir.",
+    "tag": "hosting_task",
+    "disabled": false,
+    "base_table": "node",
+    "human_name": "Hosting Task list",
+    "core": 6,
+    "display": {
+        "default": {
+            "display_title": "Defaults",
+            "display_plugin": "default",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "title": "Task queue",
+                "use_ajax": true,
+                "use_more": true,
+                "use_more_always": false,
+                "use_more_text": "More tasks",
+                "access": {
+                    "type": "perm",
+                    "perm": "access task logs"
+                },
+                "cache": {
+                    "type": "none"
+                },
+                "exposed_form": {
+                    "type": "basic"
+                },
+                "pager": {
+                    "type": "some",
+                    "options": {
+                        "items_per_page": "5",
+                        "offset": "0"
+                    }
+                },
+                "style_plugin": "table",
+                "style_options": {
+                    "row_class": "[task_status]",
+                    "columns": {
+                        "task_status": "task_status",
+                        "title": "title",
+                        "task_type": "task_type",
+                        "nid": "nid",
+                        "executed": "executed"
+                    },
+                    "default": "-1",
+                    "info": {
+                        "task_status": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "task_type": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "nid": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "executed": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        }
+                    }
+                },
+                "relationships": {
+                    "rid": {
+                        "id": "rid",
+                        "table": "hosting_task",
+                        "field": "rid"
+                    }
+                },
+                "fields": {
+                    "task_status": {
+                        "id": "task_status",
+                        "table": "hosting_task",
+                        "field": "task_status",
+                        "label": "",
+                        "exclude": true,
+                        "alter": {
+                            "status_mode": "class"
+                        },
+                        "element_label_colon": false
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title",
+                        "relationship": "rid",
+                        "exclude": true
+                    },
+                    "path": {
+                        "id": "path",
+                        "table": "node",
+                        "field": "path",
+                        "relationship": "rid",
+                        "exclude": true
+                    },
+                    "canonical": {
+                        "id": "canonical",
+                        "table": "hosting_site",
+                        "field": "canonical",
+                        "relationship": "rid",
+                        "exclude": true,
+                        "alter": {
+                            "make_link": true,
+                            "path": "[path]"
+                        }
+                    },
+                    "task_type": {
+                        "id": "task_type",
+                        "table": "hosting_task",
+                        "field": "task_type",
+                        "label": "Task",
+                        "alter": {
+                            "alter_text": true,
+                            "text": "[task_type]: [canonical]"
+                        },
+                        "element_class": "hosting-status"
+                    },
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "label": "Actions",
+                        "alter": {
+                            "alter_text": true,
+                            "text": "View",
+                            "make_link": true,
+                            "path": "hosting/task/[nid]",
+                            "link_class": "hosting-button-enabled hosting-button-log hosting-button-dialog"
+                        },
+                        "element_class": "hosting-actions"
+                    },
+                    "executed": {
+                        "id": "executed",
+                        "table": "hosting_task",
+                        "field": "executed",
+                        "exclude": true,
+                        "date_format": "long"
+                    },
+                    "created": {
+                        "id": "created",
+                        "table": "node",
+                        "field": "created",
+                        "label": "",
+                        "exclude": true,
+                        "element_label_colon": false,
+                        "date_format": "long"
+                    }
+                },
+                "sorts": {
+                    "changed": {
+                        "id": "changed",
+                        "table": "node",
+                        "field": "changed",
+                        "order": "DESC"
+                    },
+                    "hosting_task_default": {
+                        "id": "hosting_task_default",
+                        "table": "hosting_task",
+                        "field": "hosting_task_default"
+                    },
+                    "executed": {
+                        "id": "executed",
+                        "table": "hosting_task",
+                        "field": "executed"
+                    }
+                },
+                "filters": {
+                    "type": {
+                        "id": "type",
+                        "table": "node",
+                        "field": "type",
+                        "value": {
+                            "task": "task"
+                        },
+                        "expose": {
+                            "operator": false
+                        }
+                    },
+                    "status": {
+                        "id": "status",
+                        "table": "node",
+                        "field": "status",
+                        "value": "1",
+                        "expose": {
+                            "operator": false
+                        }
+                    }
+                }
+            }
+        },
+        "block": {
+            "display_title": "Block",
+            "display_plugin": "block",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "defaults": {
+                    "title": false
+                },
+                "title": "Task queue"
+            }
+        },
+        "page_global": {
+            "display_title": "Page: Global",
+            "display_plugin": "page",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "display_description": "The global task queue.",
+                "defaults": {
+                    "pager": false,
+                    "style_plugin": false,
+                    "style_options": false,
+                    "row_plugin": false,
+                    "row_options": false,
+                    "fields": false
+                },
+                "pager": {
+                    "type": "full",
+                    "options": {
+                        "items_per_page": "25",
+                        "offset": "0",
+                        "id": "0"
+                    }
+                },
+                "style_plugin": "table",
+                "style_options": {
+                    "row_class": "[task_status]",
+                    "columns": {
+                        "task_status": "task_status",
+                        "title": "title",
+                        "task_type": "task_type",
+                        "created": "created",
+                        "executed": "executed",
+                        "delta": "delta",
+                        "nid": "nid"
+                    },
+                    "default": "-1",
+                    "info": {
+                        "task_status": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "task_type": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "created": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "executed": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "delta": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "nid": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        }
+                    }
+                },
+                "fields": {
+                    "task_status": {
+                        "id": "task_status",
+                        "table": "hosting_task",
+                        "field": "task_status",
+                        "label": "",
+                        "exclude": true,
+                        "alter": {
+                            "status_mode": "class"
+                        },
+                        "element_label_colon": false
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title",
+                        "relationship": "rid",
+                        "exclude": true,
+                        "element_class": "hosting-status"
+                    },
+                    "path": {
+                        "id": "path",
+                        "table": "node",
+                        "field": "path",
+                        "relationship": "rid",
+                        "exclude": true
+                    },
+                    "canonical": {
+                        "id": "canonical",
+                        "table": "hosting_site",
+                        "field": "canonical",
+                        "relationship": "rid",
+                        "exclude": true,
+                        "alter": {
+                            "make_link": true,
+                            "path": "[path]"
+                        }
+                    },
+                    "task_type": {
+                        "id": "task_type",
+                        "table": "hosting_task",
+                        "field": "task_type",
+                        "label": "Task",
+                        "alter": {
+                            "alter_text": true,
+                            "text": "[task_type]: [canonical]"
+                        },
+                        "element_class": "hosting-status"
+                    },
+                    "created": {
+                        "id": "created",
+                        "table": "node",
+                        "field": "created",
+                        "label": "Created",
+                        "date_format": "time ago"
+                    },
+                    "executed": {
+                        "id": "executed",
+                        "table": "hosting_task",
+                        "field": "executed",
+                        "date_format": "time ago"
+                    },
+                    "delta": {
+                        "id": "delta",
+                        "table": "hosting_task",
+                        "field": "delta",
+                        "granularity": "2"
+                    },
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "label": "Actions",
+                        "alter": {
+                            "alter_text": true,
+                            "text": "View",
+                            "make_link": true,
+                            "path": "hosting/task/[nid]",
+                            "link_class": "hosting-button-enabled hosting-button-log hosting-button-dialog"
+                        },
+                        "element_class": "hosting-actions"
+                    }
+                },
+                "path": "hosting/tasks",
+                "menu": {
+                    "type": "normal",
+                    "title": "Tasks",
+                    "description": "A list of all queued and run tasks.",
+                    "weight": "3",
+                    "name": "main-menu",
+                    "context": 0,
+                    "context_only_inline": 0
+                }
+            }
+        },
+        "page_contextual": {
+            "display_title": "Page: Contextual",
+            "display_plugin": "page",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "display_description": "The task queue for a site, platform or server.",
+                "defaults": {
+                    "pager": false,
+                    "style_plugin": false,
+                    "style_options": false,
+                    "row_plugin": false,
+                    "row_options": false,
+                    "header": false,
+                    "fields": false,
+                    "arguments": false
+                },
+                "pager": {
+                    "type": "full",
+                    "options": {
+                        "items_per_page": "25",
+                        "offset": "0",
+                        "id": "0"
+                    }
+                },
+                "style_plugin": "table",
+                "style_options": {
+                    "row_class": "[task_status]",
+                    "columns": {
+                        "task_status": "task_status",
+                        "title": "title",
+                        "task_type": "task_type",
+                        "created": "created",
+                        "executed": "executed",
+                        "delta": "delta",
+                        "nid": "nid"
+                    },
+                    "default": "-1",
+                    "info": {
+                        "task_status": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "task_type": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "created": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "executed": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "delta": {
+                            "sortable": 1,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "nid": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        }
+                    }
+                },
+                "fields": {
+                    "task_status": {
+                        "id": "task_status",
+                        "table": "hosting_task",
+                        "field": "task_status",
+                        "label": "",
+                        "exclude": true,
+                        "alter": {
+                            "status_mode": "class"
+                        },
+                        "element_label_colon": false
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title",
+                        "relationship": "rid",
+                        "exclude": true,
+                        "element_class": "hosting-status"
+                    },
+                    "path": {
+                        "id": "path",
+                        "table": "node",
+                        "field": "path",
+                        "relationship": "rid",
+                        "exclude": true
+                    },
+                    "canonical": {
+                        "id": "canonical",
+                        "table": "hosting_site",
+                        "field": "canonical",
+                        "relationship": "rid",
+                        "exclude": true,
+                        "alter": {
+                            "make_link": true,
+                            "path": "path"
+                        }
+                    },
+                    "task_type": {
+                        "id": "task_type",
+                        "table": "hosting_task",
+                        "field": "task_type",
+                        "label": "Task",
+                        "alter": {
+                            "alter_text": true,
+                            "text": "[task_type]: [canonical]"
+                        },
+                        "element_class": "hosting-status"
+                    },
+                    "created": {
+                        "id": "created",
+                        "table": "node",
+                        "field": "created",
+                        "label": "Created",
+                        "date_format": "time ago"
+                    },
+                    "executed": {
+                        "id": "executed",
+                        "table": "hosting_task",
+                        "field": "executed",
+                        "date_format": "time ago"
+                    },
+                    "delta": {
+                        "id": "delta",
+                        "table": "hosting_task",
+                        "field": "delta",
+                        "granularity": "2"
+                    },
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "label": "Actions",
+                        "alter": {
+                            "alter_text": true,
+                            "text": "View",
+                            "make_link": true,
+                            "path": "hosting/task/[nid]",
+                            "link_class": "hosting-button-enabled hosting-button-log hosting-button-dialog"
+                        },
+                        "element_class": "hosting-actions"
+                    },
+                    "type": {
+                        "id": "type",
+                        "table": "node",
+                        "field": "type",
+                        "relationship": "rid",
+                        "exclude": true
+                    }
+                },
+                "arguments": {
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "relationship": "rid",
+                        "title_enable": true,
+                        "title": "<span class=\"label\">[type]</span> %1",
+                        "breadcrumb_enable": true,
+                        "breadcrumb": "Tasks",
+                        "default_argument_type": "fixed",
+                        "summary": {
+                            "number_of_records": "0",
+                            "format": "default_summary"
+                        },
+                        "summary_options": {
+                            "items_per_page": "25"
+                        },
+                        "specify_validation": true,
+                        "validate": {
+                            "type": "node"
+                        },
+                        "validate_options": {
+                            "types": {
+                                "platform": "platform",
+                                "server": "server",
+                                "site": "site"
+                            }
+                        }
+                    }
+                },
+                "path": "node/%/tasks",
+                "menu": {
+                    "type": "tab",
+                    "title": "Tasks",
+                    "description": "A list of all tasks run on this item.",
+                    "weight": "3",
+                    "name": "main-menu",
+                    "context": 0,
+                    "context_only_inline": 0
+                },
+                "tab_options": {
+                    "title": "Tasks",
+                    "description": "All tasks for this item.",
+                    "weight": "0"
+                }
+            }
+        }
+    }
+}
