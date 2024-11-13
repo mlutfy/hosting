@@ -31,8 +31,8 @@ define('HOSTING_PLATFORM_ENABLED', 1);
 function hosting_platform_autoload_info() {
   return [
     'hosting_platform_handler_field_release' => 'includes/views/handlers/hosting_platform_handler_field_release.inc',
-    'hosting_platform_handler_field_sites.inc' => 'includes/views/handlers/hosting_platform_handler_field_sites.inc',
-    'hosting_platform_handler_field_status.inc' => 'includes/views/handlers/hosting_platform_handler_field_status.inc',
+    'hosting_platform_handler_field_sites' => 'includes/views/handlers/hosting_platform_handler_field_sites.inc',
+    'hosting_platform_handler_field_status' => 'includes/views/handlers/hosting_platform_handler_field_status.inc',
   ];
 }
 
