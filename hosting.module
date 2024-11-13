@@ -467,8 +467,10 @@ function hosting_init() {
   // definition.
   define('HOSTING_DEFAULT_BASE_URL', $GLOBALS['base_url']);
 
-  // Moved from hook_menu()
   drupal_add_css(drupal_get_path('module', 'hosting') . '/hosting.css');
+  if (defined('BACKDROP_ROOT')) {
+    drupal_add_css(drupal_get_path('module', 'hosting') . '/eldir.css');
+  }
 }
 
 /**

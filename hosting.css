@@ -8,7 +8,6 @@
   position: relative;
 }
 
-
 .hosting-service-info, 
 #hosting-server-info, 
 #hosting-client-info, 
@@ -51,11 +50,6 @@
 
 table code {
   font-size:1em;
-}
-
-th.hosting-actions,
-td.hosting-actions {
-  text-align: right;
 }
 
 td.hosting-actions a.hosting-button-enabled,
@@ -226,8 +220,7 @@ div.hosting-site-field-description {
   top:50%;
   left:50%;
   margin:-15px 0 0 -15px;
-  -moz-border-radius: 3px;
-  -webkit-border-radius: 3px;
+  border-radius: 3px;
 }
 
 div#hosting-task-list, div.view-hosting-task-list .view-content { position: relative }
@@ -269,6 +262,5 @@ a.hosting-goto-site-link {
   height: 19px;
   vertical-align:middle;
   float: left;
-  -moz-border-radius: 3px;
-  -webkit-border-radius: 3px;
+  border-radius: 3px;
 }
