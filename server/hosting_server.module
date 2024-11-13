@@ -29,6 +29,17 @@ define('HOSTING_SERVER_QUEUED', 0);
 define('HOSTING_SERVER_ENABLED', 1);
 
 /**
+ * Implements hook_autoload_info() for Backdrop.
+ */
+function hosting_server_autoload_info() {
+  return [
+    'hosting_server_handler_field_human_name' => 'includes/views/handlers/hosting_server_handler_field_human_name.inc',
+    'hosting_server_handler_field_services' => 'includes/views/handlers/hosting_server_handler_field_services.inc',
+    'hosting_server_handler_field_status' => 'includes/views/handlers/hosting_server_handler_field_status.inc',
+  ];
+}
+
+/**
  * Helper function to map status codes to labels and classes.
  */
 function _hosting_server_status_codes() {
@@ -913,7 +924,14 @@ function _hosting_server_preprocess_classes(&$classes, $rows) {
   foreach ($classes as $field_label => $field_row) {
     if (is_numeric($field_label)) {
       foreach ($field_row as $index => $field_classes) {
-        $classes[$field_label][$index] .= $rows[$index][$field_label] == 'no' ? ' hosting-service-unavailable' : ' hosting-service-available';
+        if (is_array($classes[$field_label][$index])) {
+          // Backdrop
+          $classes[$field_label][$index][] = $rows[$index][$field_label] == 'no' ? ' hosting-service-unavailable' : ' hosting-service-available';
+	}
+	else {
+          // Drupal7
+          $classes[$field_label][$index] .= $rows[$index][$field_label] == 'no' ? ' hosting-service-unavailable' : ' hosting-service-available';
+	}
       }
     }
   }

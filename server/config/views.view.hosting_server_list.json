@@ -1,0 +1,189 @@
+{
+    "_config_name": "views.view.hosting_server_list",
+    "name": "hosting_server_list",
+    "description": "A list of servers in Aegir.",
+    "tag": "default",
+    "disabled": false,
+    "base_table": "node",
+    "human_name": "Hosting Server List",
+    "core": 7,
+    "display": {
+        "default": {
+            "display_title": "Master",
+            "display_plugin": "default",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "title": "Servers",
+                "use_more_always": false,
+                "access": {
+                    "type": "perm",
+                    "perm": "view server"
+                },
+                "cache": {
+                    "type": "none"
+                },
+                "exposed_form": {
+                    "type": "basic"
+                },
+                "pager": {
+                    "type": "full",
+                    "options": {
+                        "items_per_page": "10"
+                    }
+                },
+                "style_plugin": "table",
+                "style_options": {
+                    "row_class": "[status]",
+                    "columns": {
+                        "status": "status",
+                        "nid": "nid",
+                        "title": "title",
+                        "human_name": "human_name",
+                        "services": "services"
+                    },
+                    "default": "-1",
+                    "info": {
+                        "status": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "nid": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "title": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "human_name": {
+                            "sortable": 0,
+                            "default_sort_order": "asc",
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        },
+                        "services": {
+                            "align": "",
+                            "separator": "",
+                            "empty_column": 0
+                        }
+                    }
+                },
+                "fields": {
+                    "status": {
+                        "id": "status",
+                        "table": "hosting_server",
+                        "field": "status",
+                        "label": "",
+                        "exclude": true,
+                        "element_label_colon": false,
+                        "status_mode": "class"
+                    },
+                    "nid": {
+                        "id": "nid",
+                        "table": "node",
+                        "field": "nid",
+                        "exclude": true
+                    },
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title",
+                        "label": "Server",
+                        "exclude": true,
+                        "alter": {
+                            "word_boundary": false,
+                            "ellipsis": false
+                        },
+                        "link_to_node": false
+                    },
+                    "human_name": {
+                        "id": "human_name",
+                        "table": "hosting_server",
+                        "field": "human_name",
+                        "label": "Name",
+                        "alter": {
+                            "make_link": true,
+                            "path": "node/[nid]",
+                            "alt": "[title]"
+                        }
+                    },
+                    "services": {
+                        "id": "services",
+                        "table": "hosting_server",
+                        "field": "services",
+                        "label": "",
+                        "element_label_colon": false
+                    }
+                },
+                "sorts": {
+                    "title": {
+                        "id": "title",
+                        "table": "node",
+                        "field": "title"
+                    }
+                },
+                "filters": {
+                    "status": {
+                        "id": "status",
+                        "table": "node",
+                        "field": "status",
+                        "value": 1,
+                        "group": 1,
+                        "expose": {
+                            "operator": false
+                        }
+                    },
+                    "type": {
+                        "id": "type",
+                        "table": "node",
+                        "field": "type",
+                        "value": {
+                            "server": "server"
+                        }
+                    },
+                    "status_1": {
+                        "id": "status_1",
+                        "table": "hosting_server",
+                        "field": "status",
+                        "operator": "!=",
+                        "value": {
+                            "value": "-2"
+                        }
+                    }
+                }
+            }
+        },
+        "page": {
+            "display_title": "Page",
+            "display_plugin": "page",
+            "display_options": {
+                "query": {
+                    "type": "views_query",
+                    "options": []
+                },
+                "path": "hosting/servers",
+                "menu": {
+                    "type": "normal",
+                    "title": "Servers",
+                    "weight": "4",
+                    "name": "main-menu",
+                    "context": 0,
+                    "context_only_inline": 0
+                }
+            }
+        }
+    }
+}
