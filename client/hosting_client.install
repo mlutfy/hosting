@@ -94,6 +94,7 @@ function hosting_client_install() {
   }
   // See https://docs.backdropcms.org/change-records/hook_node_info-removed
   $type = [
+    "type" => "client",
     "name" => t('Client'),
     'base' => 'hosting_client',
     "has_title" => TRUE,

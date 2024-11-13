@@ -309,8 +309,9 @@ function hosting_site_preprocess_views_view(&$vars) {
     // Wrap exposed filters in a fieldset.
     if ($vars['exposed']) {
       // Ensure required css and js libs are added
-      drupal_add_js('misc/form.js');
-      drupal_add_js('misc/collapse.js');
+      $coreDir = defined('BACKDROP_ROOT') ? 'core' : '';
+      drupal_add_js("$coreDir/misc/form.js");
+      drupal_add_js("$coreDir/misc/collapse.js");
 
       // Assume other get vars are exposed filters, so expand fieldset
       // to show applied filters
@@ -340,8 +341,9 @@ function hosting_site_preprocess_views_view(&$vars) {
  */
 function _hosting_site_collapse_views_fieldset($form, &$form_state) {
   // Ensure required js libs are added
-  drupal_add_js('misc/form.js');
-  drupal_add_js('misc/collapse.js');
+  $coreDir = defined('BACKDROP_ROOT') ? 'core' : '';
+  drupal_add_js("$coreDir/misc/form.js");
+  drupal_add_js("$coreDir/misc/collapse.js");
 
   $form['select']['#attributes']['class'][] = ' collapsible collapsed';
   return $form;
