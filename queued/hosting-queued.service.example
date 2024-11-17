@@ -1,0 +1,14 @@
+[Unit]
+Description=Aegir hosting-queued
+After=mariadb.service
+
+[Service]
+User=aegir
+WorkingDirectory=/var/aegir/admin/web
+ExecStart=/usr/local/bin/bee --quiet hosting-queued
+Restart=always
+RestartSec=30
+LimitNICE=10
+
+[Install]
+WantedBy=multi-user.target

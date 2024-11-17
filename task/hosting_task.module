@@ -759,11 +759,6 @@ function hosting_tasks_queue($count = 20) {
  *   @see drush_invoke_process().
  */
 function hosting_task_execute($task, $backend_options = array()) {
-  // Log in watchdog and drush.
-  watchdog('hosting_task', 'Starting task "@title" [node/@nid].', array(
-    '@title' => $task->title,
-    '@nid' => $task->nid,
-  ), WATCHDOG_NOTICE, url("node/$task->nid"));
   drush_log(dt('Starting task "@title" [node/@nid].', array(
     '@title' => $task->title,
     '@nid' => $task->nid,
@@ -1465,7 +1460,7 @@ function hosting_get_tasks($filter_by = NULL, $filter_value = NULL, $count = 5, 
  *   An associative array containing task nodes, indexed by node id.
  */
 function hosting_get_new_tasks($limit = 20, $rid = NULL, $task_type = NULL) {
-  $return = array();
+  $return = [];
   $query = db_select('hosting_task', 't');
   $query->innerJoin('node', 'n', 't.vid = n.vid');
   $query
@@ -1489,18 +1484,6 @@ function hosting_get_new_tasks($limit = 20, $rid = NULL, $task_type = NULL) {
     $return[$node->nid] = node_load($node->nid);
   }
   return $return;
-}
-
-/**
- * Retrieve a list of outstanding, queued, tasks.
- *
- * @deprecated First deprecated in Hosting 3.9 because this function was made
- * part of the public API, use hosting_get_new_tasks() instead.
- *
- * @see hosting_get_new_tasks
- */
-function _hosting_get_new_tasks($limit = 20) {
-  return hosting_get_new_tasks($limit);
 }
 
 /**
