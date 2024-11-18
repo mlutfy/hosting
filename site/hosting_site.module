@@ -41,6 +41,7 @@ function hosting_site_autoload_info() {
     'hosting_site_handler_field_canonical' => 'includes/views/handlers/hosting_site_handler_field_canonical.inc',
     'hosting_site_handler_field_language' => 'includes/views/handlers/hosting_site_handler_field_language.inc',
     'hosting_site_handler_field_status' => 'includes/views/handlers/hosting_site_handler_field_status.inc',
+    'hosting_site_field_handler_canonical' => 'includes/views/handlers/hosting_site_handler_field_canonical.inc',
     'hosting_site_plugin_access' => 'includes/views/plugins/hosting_site_plugin_access.inc',
   ];
 }
