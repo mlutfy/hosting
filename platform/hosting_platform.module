@@ -126,9 +126,8 @@ function hosting_platform_hosting_tasks() {
   );
   $tasks['platform']['delete'] = array(
     'title' => t('Delete Platform'),
-    'description' => t('Deleting this platform will completely remove it from the hosting system.
-        This process can not be undone. It can not be performed if you have sites currently
-        running on this platform.
+    'description' => t('Deleting this platform will remove it from Aegir, but it will not remove the files.
+        It can not be performed if you have sites currently running on this platform.
         Are you really sure you want to delete this platform?'),
     'weight' => 10,
     'dialog' => TRUE,
@@ -477,7 +476,7 @@ function hosting_platform_form_alter(&$form, &$form_state, $form_id) {
       // unless the platform's already been deleted via the Delete task.
       $node = $form['#node'];
       if (isset($node->platform_status) && $node->platform_status !== HOSTING_PLATFORM_DELETED) {
-        $form['actions']['delete']['#type'] = 'hidden';
+        unset($form['actions']['delete']);
       }
       break;
     case 'hosting_settings':
@@ -672,8 +671,6 @@ function hosting_platform_path_exists($path, $exclude_nid = NULL) {
 function hosting_platform_load($nodes) {
   foreach ($nodes as $nid => &$node) {
     $additions = db_query('SELECT publish_path, verified, web_server, status AS platform_status FROM {hosting_platform} WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
-    // Avoid PHP 5.4 warning when platform doesn't exist yet.
-    // See: https://drupal.org/node/1940378
     $additions = $additions ? $additions : new stdClass();
     $iid = db_query("SELECT iid
                      FROM {hosting_package_instance} i
