@@ -16,6 +16,15 @@ function hosting_task_init() {
   drupal_add_js($settings, 'setting');
 }
 
+/**
+ * Implements hook_autoload_info() for Backdrop.
+ */
+function hosting_task_autoload_info() {
+  return [
+    'hosting_task_handler_sort_default' => 'includes/views/handlers/hosting_task_handler_sort_default.inc',
+    'hosting_task_handler_field_status' => 'includes/views/handlers/hosting_task_handler_field_status.inc',
+  ];
+}
 
 /**
  * Implements hook_menu().
