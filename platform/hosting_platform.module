@@ -382,7 +382,7 @@ function hosting_platform_form(&$node) {
   // the path if the makefile was specified is that there's the possibility
   // that the platform path was actually created when the node was saved the
   // first time and we have cruft lying around to cleanup.
-  if (!isset($node->nid) || (!$node->verified && empty($node->makefile))) {
+  if (!isset($node->nid) || (empty($node->verified))) {
     $base_path = variable_get('hosting_platform_base_path', '/var/aegir/platforms/');
     $default_path = '';
     $field_prefix = $base_path;
@@ -402,14 +402,6 @@ function hosting_platform_form(&$node) {
 
     $form['publish_path'] = array(
       '#type' => 'machine_name',
-      '#machine_name' =>  array(
-        'exists' => 'hosting_platform_path_exists',
-        'source' => array('title'),
-        'label' => t('Publish path'),
-        'standalone' => TRUE,
-        'replace_pattern' => '[^a-z0-9_\.\-\/]+',
-        'field_prefix' => variable_get('hosting_platform_base_path', '/var/aegir/platforms/'),
-      ),
       '#title' => t('Publish path'),
       '#weight' => -5,
       '#required' => TRUE,
@@ -436,34 +428,6 @@ function hosting_platform_form(&$node) {
       '#value' => hosting_path_normalize($node->publish_path),
     );
   }
-
-  $form['frommakefile'] = array(
-    '#type' => 'fieldset',
-    '#tree' => TRUE,
-    '#title' => t('Deploy from makefile'),
-    '#collapsible' => TRUE,
-    '#description' => t('You may deploy this platform from a makefile.'),
-    '#weight' => -1,
-  );
-
-  $form['frommakefile']['makefile'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Makefile'),
-    '#description' => t('The absolute path on the filesystem or public URL of a makefile that will be used to create the platform in the directory specified above. If the directory already exists, this file will be ignored.'),
-    '#size' => 40,
-    '#default_value' => isset($node->makefile) ? $node->makefile : NULL,
-    '#maxlength' => 255,
-  );
-
-  $form['frommakefile']['make_working_copy'] = array(
-    '#type' => 'radios',
-    '#title' => t('Drush make option'),
-    '#default_value' => isset($node->make_working_copy) ? $node->make_working_copy : 0,
-    '#options' => array(
-      0 => t('Normal - Discards SCM files'),
-      1 => t('Working copy - preserves SCM files'),
-    ),
-  );
 
   $form['#after_build'][] = 'hosting_platform_form_platform_after_build';
 
@@ -499,12 +463,7 @@ function hosting_platform_form(&$node) {
  * After build callback for the hosting_platform_form.
  */
 function hosting_platform_form_platform_after_build($form) {
-
   drupal_add_js(drupal_get_path('module', 'hosting_platform') . '/hosting_platform.js');
-
-  $form['frommakefile']['makefile']['#attributes']['class'][] = ' hosting-platform-working-copy-source';
-  $form['frommakefile']['make_working_copy']['#attributes']['class'][] = ' hosting-platform-working-copy-target';
-
   return $form;
 }
 
@@ -544,11 +503,11 @@ function hosting_platform_insert($node) {
       'vid' => $node->vid,
       'nid' => $node->nid,
       'publish_path' => hosting_path_normalize($node->publish_path),
-      'makefile' => isset($node->makefile) ? $node->makefile : (isset($node->frommakefile['makefile']) ? $node->frommakefile['makefile'] : ''),
+      'makefile' => '', // deprecated
       'verified' => isset($node->verified) ? $node->verified : 0,
       'web_server' => $node->web_server,
       'status' => isset($node->platform_status) ? $node->platform_status : 0,
-      'make_working_copy' => isset($node->frommakefile['make_working_copy']) ? $node->frommakefile['make_working_copy'] : 0,
+      'make_working_copy' => 0, // deprecated
     ))
     ->execute();
   if (!isset($node->old_vid)) {
@@ -574,11 +533,11 @@ function hosting_platform_update($node) {
     db_update('hosting_platform')
       ->fields(array(
         'publish_path' => hosting_path_normalize($node->publish_path),
-        'makefile' => isset($node->makefile) ? $node->makefile : (isset($node->frommakefile['makefile']) ? $node->frommakefile['makefile'] : ''),
+        'makefile' => '', // deprecated
         'web_server' => $node->web_server,
-        'verified' => $node->verified,
-        'status' => $node->platform_status,
-        'make_working_copy' => isset($node->frommakefile['make_working_copy']) ? $node->frommakefile['make_working_copy'] : $node->make_working_copy,
+        'verified' => $node->verified ?? 0,
+        'status' => $node->platform_status ?? HOSTING_PLATFORM_QUEUED,
+        'make_working_copy' => 0, // deprecated
       ))
       ->condition('nid', $node->nid)
       ->execute();
@@ -618,7 +577,7 @@ function hosting_platform_delete($node) {
 
 /**
  * Element validator for publish_path. Only run when field is editable.
- * (New node or failed validation and no makefile.)
+ * (New node or failed validation.)
  */
 function hosting_platform_form_publish_path_validate($element, &$form_state, &$form) {
   $platform_base_path = variable_get('hosting_platform_base_path', '/var/aegir/platforms/');
@@ -712,7 +671,7 @@ function hosting_platform_path_exists($path, $exclude_nid = NULL) {
  */
 function hosting_platform_load($nodes) {
   foreach ($nodes as $nid => &$node) {
-    $additions = db_query('SELECT publish_path, makefile, verified, web_server, status AS platform_status, make_working_copy FROM {hosting_platform} WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
+    $additions = db_query('SELECT publish_path, verified, web_server, status AS platform_status FROM {hosting_platform} WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
     // Avoid PHP 5.4 warning when platform doesn't exist yet.
     // See: https://drupal.org/node/1940378
     $additions = $additions ? $additions : new stdClass();
@@ -727,16 +686,6 @@ function hosting_platform_load($nodes) {
                        ':rid' => $node->nid,
                      )
                    )->fetchField();
-
-    if (empty($node->frommakefile)) {
-      $node->frommakefile = array('makefile' => '', 'make_working_copy' => 0);
-    }
-    if (!empty($additions->makefile)) {
-      $node->frommakefile['makefile'] = $additions->makefile;
-    }
-    if (!empty($additions->make_working_copy)) {
-      $node->frommakefile['make_working_copy'] = $additions->make_working_copy;
-    }
 
     $additions->release = hosting_package_instance_load($iid);
     $additions->profiles = hosting_get_profiles($node->nid, 'short_name');
