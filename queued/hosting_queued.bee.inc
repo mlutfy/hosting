@@ -134,7 +134,12 @@ function bee_hosting_queued() {
           sleep(1);
 
           // Execute the task.
-          hosting_task_execute($task, ['interactive' => TRUE]);
+	  if (defined('BACKDROP_ROOT')) {
+            hosting_civicrm_ansible_execute($task);
+          }
+          else {
+            hosting_task_execute($task, ['interactive' => TRUE]);
+          }
 
           // Delay for a configurable amount of time.
           $delay = variable_get('hosting_queued_post_task_delay', 0);

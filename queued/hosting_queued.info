@@ -2,5 +2,6 @@ name = Hosting queue daemon
 description = Allows the hosting queue to be run in a daemon.
 package = Hosting
 dependencies[] = hosting
+dependencies[] = hosting_civicrm_ansible
 core = 7.x
 backdrop = 1.x
