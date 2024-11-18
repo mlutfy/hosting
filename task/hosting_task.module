@@ -228,6 +228,7 @@ function hosting_task_ajax_queue() {
 function hosting_task_cancel($node) {
   if ($node->type == 'task' && $node->task_status == HOSTING_TASK_QUEUED) {
     $node->task_status = HOSTING_TASK_WARNING;
+    $node->executed = time();
     node_save($node);
 
     // Log the cancellation.
@@ -545,8 +546,8 @@ function hosting_task_log($vid, $type, $message, $error = '', $timestamp = NULL)
 function hosting_task_retry($task_id) {
   $node = node_load($task_id);
   if ($node->task_status != HOSTING_TASK_QUEUED) {
-    drupal_set_message(t("The task is being retried and has been added to the hosting queue again"));
-    hosting_task_log($node->vid, 'queue', t("The task is being retried and has been added to the hosting queue again"));
+    drupal_set_message(t("The task has been added to the hosting queue again"));
+    $old_vid = $node->vid;
     $node->nid = NULL;
     $node->vid = NULL;
     $node->original = NULL;
@@ -555,6 +556,7 @@ function hosting_task_retry($task_id) {
     $node->changed = REQUEST_TIME;
     $node->task_status = HOSTING_TASK_QUEUED;
     node_save($node);
+    hosting_task_log($old_vid, 'queue', t("The task has been re-queued as task #!task", ['!task' => $node->nid]));
     drupal_goto("node/{$node->nid}");
   }
 }

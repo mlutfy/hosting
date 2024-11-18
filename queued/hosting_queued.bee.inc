@@ -130,10 +130,9 @@ function bee_hosting_queued() {
           // with arguments and run it immediately, they should be able to do this
           // without us getting in there first.
           // This is a workaround for http://drupal.org/node/1003536
-          bee_instant_message(bt('Found task to execute. Pausing before execution.'));
-          sleep(1);
+          bee_instant_message(bt('Found task #!nid to execute.', ['!nid' => $task->nid]));
 
-          // Execute the task.
+          // Execute the task
 	  if (defined('BACKDROP_ROOT')) {
             hosting_civicrm_ansible_execute($task);
           }
@@ -174,5 +173,5 @@ function bee_hosting_queued() {
 function hosting_queued_stop() {
   bee_instant_message('Releasing lock on task queue.');
   lock_release('hosting_queue_tasks_running');
-  exit($status);
+  exit(0);
 }

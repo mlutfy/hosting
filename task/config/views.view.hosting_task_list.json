@@ -174,21 +174,16 @@
                     }
                 },
                 "sorts": {
-                    "changed": {
-                        "id": "changed",
-                        "table": "node",
-                        "field": "changed",
-                        "order": "DESC"
-                    },
                     "hosting_task_default": {
                         "id": "hosting_task_default",
                         "table": "hosting_task",
                         "field": "hosting_task_default"
                     },
-                    "executed": {
-                        "id": "executed",
-                        "table": "hosting_task",
-                        "field": "executed"
+                    "changed": {
+                        "id": "changed",
+                        "table": "node",
+                        "field": "changed",
+                        "order": "DESC"
                     }
                 },
                 "filters": {
