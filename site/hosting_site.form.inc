@@ -68,6 +68,27 @@ function _hosting_site_field(&$form, $node, $item, $element, $filter_display = '
   $form[$item]['#suffix'] = "</div>";
 }
 
+/**
+ * Moved here from hosting_client, which we removed
+ */
+function _hosting_get_allowed_platforms() {
+  $platforms = [];
+
+  $result = db_query("SELECT n.nid, n.title
+    FROM {node} n
+    LEFT JOIN {hosting_platform} h ON n.nid = h.nid
+    WHERE n.type = :type
+      AND n.status = :nstatus
+      AND h.status > :hstatus", [
+        ':type' => 'platform',
+        ':nstatus' => 1,
+        ':hstatus' => HOSTING_PLATFORM_LOCKED,
+      ]);
+  foreach ($result as $p) {
+    $platforms[$p->nid] = $p->title;
+  }
+  return $platforms;
+}
 
 /**
  * Pass in a site node and return an array of valid options for it's fields.
@@ -369,17 +390,6 @@ function hosting_site_validate($node, &$form) {
   if ($length > HOSTING_MAX_ALIAS_LENGTH) {
     $long = $length - HOSTING_MAX_ALIAS_LENGTH;
     form_set_error("title", t('The url your provided is @long character(s) too long. Please shorten.', array('@long' => $long)));
-  }
-
-  if (isset($node->new_client) && !$node->new_client) {
-    $client = hosting_get_client($node->client);
-    if (!$node->client || !$client) {
-      form_set_error('client', t('Please fill in a valid client'));
-    }
-    if (!user_access('administer clients') && !array_key_exists($client->nid, hosting_get_client_from_user($user->uid))) {
-      form_set_error('client', t('Access denied to client @client', array('@client' => $client->title)));
-    }
-    $node->client = $client->nid;
   }
 
   // TODO: maybe we should allow creation of sites that conflict with HOSTING_SITE_DISABLED (which would then need to be renamed before being re-enabled)

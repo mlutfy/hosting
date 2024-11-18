@@ -240,8 +240,7 @@ function hosting_site_nodeapi_site_presave(&$node) {
  * Implements hook_insert().
  */
 function hosting_site_insert(&$node) {
-  $client = hosting_get_client($node->client);
-  $node->client = $client->nid;
+  $node->client = 0; // deprecated
   $node->site_language = isset($node->site_language) ? $node->site_language : 'en';
   // If the cron_key is set use it, otherwise generate a new one.
   $node->cron_key = isset($node->cron_key) ? $node->cron_key : '';
@@ -361,8 +360,7 @@ function hosting_site_update(&$node) {
     hosting_site_insert($node);
   }
   else {
-    $client = hosting_get_client($node->client);
-    $node->client = $client->nid;
+    $node->client = 0; // reprecated
     if ($node->site_status == HOSTING_SITE_DELETED) {
       $node->no_verify = TRUE;
     }
