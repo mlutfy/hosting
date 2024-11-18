@@ -966,6 +966,11 @@ function _hosting_platform_list_class($status) {
  * Implements hook_hosting_task_guarded_nodes().
  */
 function hosting_platform_hosting_task_guarded_nodes() {
+  // In Backdrop, we do not manage the backdrop platform with Aegir
+  // because we run upgrades in-place with composer
+  if (defined('BACKDROP_ROOT')) {
+    return [];
+  }
   return array(
     hosting_get_hostmaster_platform_nid()
   );
