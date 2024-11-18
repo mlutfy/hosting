@@ -532,6 +532,11 @@ function hosting_task_log($vid, $type, $message, $error = '', $timestamp = NULL)
       'timestamp' => $timestamp,
     ))
     ->execute();
+
+  // For when running the queue with bee on backdrop
+  if (function_exists('bee_instant_message')) {
+    bee_instant_message($message, $type);
+  }
 }
 
 /**
