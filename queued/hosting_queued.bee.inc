@@ -118,8 +118,8 @@ function bee_hosting_queued() {
     // [ML] SYMBIOTIC Removed the try/catch here to let the process fail
     // and let systemd restart it completely.
     if ($tasks = @hosting_get_new_tasks(1)) {
-      bee_instant_message(bt("Found %count tasks in queue. Running...", [
-        '%count' => count($tasks),
+      bee_instant_message(bt("Found !count tasks in queue. Acquiring lock...", [
+        '!count' => count($tasks),
       ]), "notice");
 
       if (lock_acquire('hosting_queue_tasks_running', HOSTING_QUEUE_LOCK_TIMEOUT)) {
@@ -165,13 +165,8 @@ function bee_hosting_queued() {
 
 /**
  * Handle interruption signals gracefully
- *
- * We do not want to interrupt children tasks, so we wait for them
- * before stopping.
  */
-function hosting_queued_stop($signal) {
-  $status = NULL;
-  pcntl_wait($status);
+function hosting_queued_stop() {
   bee_instant_message('Releasing lock on task queue.');
   lock_release('hosting_queue_tasks_running');
   exit($status);
