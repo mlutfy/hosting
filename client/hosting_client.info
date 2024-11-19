@@ -1,0 +1,6 @@
+name = Client
+description = Deprecated module which allowed Hostmaster to configure clients. This module can be uninstalled.
+package = Hosting
+dependencies[] = hosting
+core = 7.x
+backdrop = 1.x
