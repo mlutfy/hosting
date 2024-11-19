@@ -100,7 +100,7 @@ function hosting_drush_command() {
  * @param string $alias
  *   The name of the provision context to import.
  */
-function drush_hosting_import($alias) {
+function drush_hosting_import($alias = NULL) {
   if (!empty($alias)) {
     if (d($alias)->name) {
       drush_log("Importing $alias");
