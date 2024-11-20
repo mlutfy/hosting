@@ -1279,13 +1279,7 @@ function _hosting_task_log_table($node, $last_position = 0) {
     $exec_time = '';
     $row_count = -1;
     foreach ($result as $entry) {
-      if (strlen($entry->message) > 300) {
-        $summary = "<span class='hosting-task-summary'>" . filter_xss(substr($entry->message, 0, 75), array()) . "... <a href='javascript:void(0)' class='hosting-summary-expand modalframe-exclude'>(" . t('Expand') . ')</a></span>';
-        $message = $summary . "<span class='hosting-task-full'>" . filter_xss($entry->message) . '</span>';
-      }
-      else {
-        $message = filter_xss($entry->message);
-      }
+      $message = filter_xss($entry->message);
 
       // Add error and warning anchors, so we can provide a quick link to them.
       if ($entry->type == 'error') {
