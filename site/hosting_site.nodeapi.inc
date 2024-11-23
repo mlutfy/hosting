@@ -360,7 +360,7 @@ function hosting_site_update(&$node) {
     hosting_site_insert($node);
   }
   else {
-    $node->client = 0; // reprecated
+    $node->client = 0; // deprecated
     if ($node->site_status == HOSTING_SITE_DELETED) {
       $node->no_verify = TRUE;
     }
