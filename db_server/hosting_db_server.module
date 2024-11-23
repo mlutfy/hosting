@@ -5,6 +5,16 @@
  */
 
 /**
+ * Implements hook_autoload_info() for Backdrop
+ */
+function hosting_db_server_autoload_info() {
+  return [
+    'hostingService_db' => 'hosting_db_server.service.inc',
+    'hostingService_db_mysql' => 'hosting_db_server.service.inc',
+  ];
+}
+
+/**
  * Implements hook_hosting_service().
  */
 function hosting_db_server_hosting_service() {

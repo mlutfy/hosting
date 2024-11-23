@@ -36,6 +36,7 @@ function hosting_server_autoload_info() {
     'hosting_server_handler_field_human_name' => 'includes/views/handlers/hosting_server_handler_field_human_name.inc',
     'hosting_server_handler_field_services' => 'includes/views/handlers/hosting_server_handler_field_services.inc',
     'hosting_server_handler_field_status' => 'includes/views/handlers/hosting_server_handler_field_status.inc',
+    'hostingService' => 'hosting_server.service.inc',
   ];
 }
 
