@@ -64,6 +64,12 @@ function hosting_site_schema() {
         'not null' => FALSE,
         'default' => '',
       ),
+      'db_passwd' => [
+        'type' => 'varchar',
+        'length' => 64,
+        'not null' => FALSE,
+        'default' => '',
+      ],
       'platform' => array(
         'type' => 'int',
         'not null' => TRUE,
@@ -145,4 +151,18 @@ function hosting_site_schema() {
   );
 
   return $schema;
+}
+
+/**
+ * Add the db_passwd column.
+ */
+function hosting_site_update_7500() {
+  if (!db_field_exists('hosting_site', 'db_passwd')) {
+    db_add_field('hosting_site', 'db_passwd', [
+      'type' => 'varchar',
+      'length' => 65,
+      'not null' => TRUE,
+      'default' => '',
+    ]);
+  }
 }

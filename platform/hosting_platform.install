@@ -52,36 +52,59 @@ function hosting_platform_schema() {
         'size' => 'big',
         'not null' => FALSE,
       ),
-      'makefile' => array(
+      'software' => [
         'type' => 'text',
         'size' => 'big',
-        'not null' => FALSE,
-      ),
-      'web_server' => array(
+        'default' => NULL,
+      ],
+      'version' => [
+        'type' => 'text',
+        'size' => 'big',
+        'default' => NULL,
+      ],
+      'web_server' => [
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-      ),
-      'verified' => array(
+      ],
+      'verified' => [
         'type' => 'int',
         'not null' => TRUE,
         'default' => 0,
-      ),
-      'status' => array(
+      ],
+      'status' => [
         'type' => 'int',
         'size' => 'tiny',
         'not null' => TRUE,
         'default' => 0,
-      ),
-      'make_working_copy' => array(
-        'type' => 'int',
-        'unsigned' => TRUE,
-        'not null' => TRUE,
-        'default' => 0,
-      ),
+      ],
     ),
     'primary key' => array('vid'),
   );
 
   return $schema;
+}
+
+/**
+ * Add the software and version column.
+ */
+function hosting_platform_update_7500() {
+  if (!db_field_exists('hosting_platform', 'software')) {
+    db_add_field('hosting_platform', 'software', [
+      'type' => 'text',
+      'size' => 'big',
+      'default' => NULL,
+    ]);
+  }
+  if (!db_field_exists('hosting_platform', 'version')) {
+    db_add_field('hosting_platform', 'version', [
+      'type' => 'text',
+      'size' => 'big',
+      'default' => NULL,
+    ]);
+  }
+  if (db_field_exists('hosting_platform', 'makefile')) {
+    db_drop_field('hosting_platform', 'makefile');
+    db_drop_field('hosting_platform', 'make_working_copy');
+  }
 }

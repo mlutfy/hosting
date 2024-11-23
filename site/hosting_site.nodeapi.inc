@@ -249,6 +249,10 @@ function hosting_site_insert(&$node) {
   // Provide a dummy profile, e.g. for hosting-import.
   $node->profile = isset($node->profile) ? $node->profile : 0;
 
+  // Database credentials
+  $node->db_passwd = $node->db_passwd ?? hosting_site_db_utils::generate_password();
+  $node->db_name = $node->db_name ?? hosting_site_db_utils::suggest_db_name($node->title);
+
   // If platform NID is not defined, but platform data is available,
   // create the platform.
   if (empty($node->platform)
@@ -321,17 +325,17 @@ function hosting_site_insert(&$node) {
       'nid' => $node->nid,
       'client' => $node->client,
       'db_server' => $node->db_server,
-      'db_name' => isset($node->db_name) ? $node->db_name : '',
+      'db_name' => $node->db_name ?? '',
+      'db_passwd' => $node->db_passwd ?? '',
       'platform' => $node->platform,
       'profile' => $node->profile,
       'language' => $node->site_language,
       'last_cron' => $node->last_cron,
       'cron_key' => $node->cron_key,
-      'status' => isset($node->site_status) ? $node->site_status : HOSTING_SITE_QUEUED,
-      'verified' => isset($node->verified) ? $node->verified : 0,
+      'status' => $node->site_status ?? HOSTING_SITE_QUEUED,
+      'verified' => $node->verified ?? 0,
     ))
     ->execute();
-
 }
 
 /**
@@ -370,6 +374,7 @@ function hosting_site_update(&$node) {
         'client' => $node->client,
         'db_server' => $node->db_server,
         'db_name' => $node->db_name,
+        'db_passwd' => $node->db_passwd,
         'platform' => $node->platform,
         'last_cron' => $node->last_cron,
         'cron_key' => $node->cron_key,
@@ -405,9 +410,10 @@ function hosting_site_node_update($node) {
 function hosting_site_load($nodes) {
   foreach ($nodes as $nid => &$node) {
     $additions = db_query(
-      'SELECT  client, db_server, db_name, platform, profile, web_server, publish_path,
+      'SELECT  client, db_server, db_name, db_passwd, platform, profile, web_server, publish_path,
         language AS site_language, last_cron, cron_key, s.status AS site_status,
-        p.status AS platform_status, s.verified, p.verified as platform_verified
+	p.status AS platform_status, s.verified, p.verified as platform_verified,
+        p.software, p.version
       FROM {hosting_site} s
         LEFT JOIN {hosting_platform} p ON s.platform = p.nid
       WHERE s.vid = :vid',

@@ -327,7 +327,8 @@ function hosting_server_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'server_node_form') {
     $node = $form['#node'];
     if (isset($node->server_status) && $node->server_status !== HOSTING_SERVER_DELETED) {
-      $form['actions']['delete']['#type'] = 'hidden';
+      // [ML] causes problems on Backdrop "Invalid option in Delete element"
+      // $form['actions']['delete']['#type'] = 'hidden';
     }
   }
 }

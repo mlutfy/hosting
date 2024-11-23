@@ -366,7 +366,7 @@ function _hosting_platform_is_locked($node) {
  */
 function hosting_platform_form(&$node) {
   $type = node_type_get_type($node);
-  $form['title'] = array(
+  $form['title'] = [
     '#type' => 'textfield',
     '#title' => t('Name'),
     '#required' => TRUE,
@@ -374,7 +374,26 @@ function hosting_platform_form(&$node) {
     '#size' => 40,
     '#default_value' => $node->title,
     '#maxlength' => 255,
-  );
+  ];
+  // @todo Eventually auto-detect?
+  $form['software'] = [
+    '#type' => 'textfield',
+    '#title' => t('Software'),
+    '#required' => FALSE,
+    '#description' => t('Name of the software on the platform. Must be one of: drupal, wordpress, civicrm (for standalone). Must be lower-caps. Will be auto-detected one day.'),
+    '#size' => 40,
+    '#default_value' => $node->software,
+    '#maxlength' => 255,
+  ];
+  $form['version'] = [
+    '#type' => 'textfield',
+    '#title' => t('Version'),
+    '#required' => FALSE,
+    '#description' => t('Specific version of the software. Ex: 10.1.2'),
+    '#size' => 10,
+    '#default_value' => $node->version,
+    '#maxlength' => 255,
+  ];
 
   // Allow editing if the node is in creation, or if wasn't verified correctly
   // *and* we're not using a makefile. The reason why we don't allow editing
@@ -498,16 +517,16 @@ function hosting_platform_insert($node) {
     hosting_add_task($node->nid, 'verify');
   }
   $id = db_insert('hosting_platform')
-    ->fields(array(
+    ->fields([
       'vid' => $node->vid,
       'nid' => $node->nid,
       'publish_path' => hosting_path_normalize($node->publish_path),
-      'makefile' => '', // deprecated
+      'software' => $node->software,
+      'version' => $node->version,
       'verified' => isset($node->verified) ? $node->verified : 0,
       'web_server' => $node->web_server,
       'status' => isset($node->platform_status) ? $node->platform_status : 0,
-      'make_working_copy' => 0, // deprecated
-    ))
+    ])
     ->execute();
   if (!isset($node->old_vid)) {
     hosting_context_register($node->nid, 'platform_' . preg_replace("/[!\W]/", "", $node->title));
@@ -530,14 +549,14 @@ function hosting_platform_update($node) {
       $node->no_verify = TRUE;
     }
     db_update('hosting_platform')
-      ->fields(array(
+      ->fields([
         'publish_path' => hosting_path_normalize($node->publish_path),
-        'makefile' => '', // deprecated
+        'software' => $node->software,
+        'version' => $node->version,
         'web_server' => $node->web_server,
         'verified' => $node->verified ?? 0,
         'status' => $node->platform_status ?? HOSTING_PLATFORM_QUEUED,
-        'make_working_copy' => 0, // deprecated
-      ))
+      ])
       ->condition('nid', $node->nid)
       ->execute();
   }
@@ -670,7 +689,7 @@ function hosting_platform_path_exists($path, $exclude_nid = NULL) {
  */
 function hosting_platform_load($nodes) {
   foreach ($nodes as $nid => &$node) {
-    $additions = db_query('SELECT publish_path, verified, web_server, status AS platform_status FROM {hosting_platform} WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
+    $additions = db_query('SELECT publish_path, verified, web_server, status AS platform_status, software, version FROM {hosting_platform} WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
     $additions = $additions ? $additions : new stdClass();
     $iid = db_query("SELECT iid
                      FROM {hosting_package_instance} i
@@ -731,54 +750,48 @@ function hosting_platform_wildcard_load($arg) {
 function hosting_platform_view($node, $view_mode, $langcode = NULL) {
   hosting_set_breadcrumb($node);
 
-  $node->content['info'] = array(
+  $node->content['info'] = [
     '#prefix' => '<div id="hosting-platform-info" class="hosting-info-list">',
     '#suffix' => '</div>',
-  );
-
-  $node->content['info']['verified'] = array(
+  ];
+  $node->content['info']['verified'] = [
     '#type' => 'item',
     '#title' => t('Verified'),
     '#markup' => hosting_format_interval($node->verified),
     '#weight' => -10,
-  );
-
-  $node->content['info']['publish_path'] = array(
+  ];
+  $node->content['info']['publish_path'] = [
     '#type' => 'item',
     '#title' => t('Publish path'),
     '#markup' => filter_xss($node->publish_path),
     '#weight' => -8,
-  );
-
-  $node->content['info']['web_server'] = array(
+  ];
+  $node->content['info']['software'] = [
+    '#type' => 'item',
+    '#title' => t('Software'),
+    '#markup' => filter_xss($node->software) ?: t('n/a'),
+    '#weight' => -8,
+  ];
+  $node->content['info']['version'] = [
+    '#type' => 'item',
+    '#title' => t('Version'),
+    '#markup' => filter_xss($node->version) ?: t('n/a'),
+    '#weight' => -8,
+  ];
+  // This is not really used because the platforms are always local (not deployed using rsync)
+  /*
+  $node->content['info']['web_server'] = [
     '#type' => 'item',
     '#title' => t('Web server'),
     '#markup' => _hosting_node_link($node->web_server),
     '#weight' => -7,
-  );
-  $node->content['info']['status'] = array(
+  ];
+  */
+  $node->content['info']['status'] = [
     '#type' => 'item',
     '#title' => t('Status'),
     '#markup' => _hosting_platform_status($node->platform_status),
-  );
-
-  if ($node->makefile) {
-    $node->content['info']['makefile'] = array(
-      '#type' => 'item',
-      '#title' => t('Drush makefile'),
-      '#markup' => (preg_match('/^http|^ftp/', $node->makefile)) ? l(t('makefile'), $node->makefile) : filter_xss($node->makefile),
-    );
-  }
-
-  if ($node->release) {
-    $release = sprintf("%s %s", $node->release->title, $node->release->version);
-    $node->content['info']['release'] = array(
-      '#type' => 'item',
-      '#title' => t('Release'),
-      '#markup' => _hosting_node_link($node->release->nid, $release),
-      '#weight' => -6,
-    );
-  }
+  ];
 
   // Task list.
   if ($view_mode == 'full' && $node->nid) {
@@ -832,9 +845,14 @@ function hosting_platform_entity_property_info() {
       'description' => t('The location on disk of the platform.'),
       'type' => 'text',
     ),
-    'makefile' => array(
-      'label' => t('Makefile'),
-      'description' => t('The makefile used to generate this platform (if any).'),
+    'software' => array(
+      'label' => t('Software'),
+      'description' => t('Ex: Drupal, WordPress, CiviCRM (for standalone). Case-sensitive. Eventually will be detected by Verify.'),
+      'type' => 'text',
+    ),
+    'version' => array(
+      'label' => t('Version'),
+      'description' => t('Specific version of the software. Ex: 10.1.2'),
       'type' => 'text',
     ),
     'verified' => array(
@@ -854,21 +872,7 @@ function hosting_platform_entity_property_info() {
       'type' => 'integer',
       'options list' => '_hosting_platform_status_codes_labels',
     ),
-    'make_working_copy' => array(
-      'label' => t('Drush make - Working copy'),
-      'description' => t('Determines if the working-copy option is used when using Drush make to generate the codebase for the platform.'),
-      'type' => 'boolean',
-    ),
   );
-  if (hosting_feature('client')) {
-    $info['node']['bundles']['platform']['properties']['clients'] = array(
-      'label' => t('Clients with access'),
-      'description' => t('An array of clients with access to this platform.'),
-      'type' => 'list<node>',
-      'bundle' => 'client',
-    );
-  }
-
   return $info;
 }
 
