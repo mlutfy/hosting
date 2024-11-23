@@ -433,7 +433,8 @@ function hosting_site_form_alter(&$form, &$form_state, $form_id) {
   if ($form_id == 'site_node_form') {
     $node = $form['#node'];
     if (isset($node->site_status) && $node->site_status !== HOSTING_SITE_DELETED) {
-      $form['actions']['delete']['#type'] = 'hidden';
+      // [ML] This breaks node/edit on Backdrop
+      // $form['actions']['delete']['#type'] = 'hidden';
     }
   }
   if (array_key_exists('views_bulk_operations', $form)) {
