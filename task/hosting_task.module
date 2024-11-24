@@ -548,6 +548,7 @@ function hosting_task_retry($task_id) {
   if ($node->task_status != HOSTING_TASK_QUEUED) {
     drupal_set_message(t("The task has been added to the hosting queue again"));
     $old_vid = $node->vid;
+    $old_nid = $node->nid;
     $node->nid = NULL;
     $node->vid = NULL;
     $node->original = NULL;
@@ -557,6 +558,7 @@ function hosting_task_retry($task_id) {
     $node->task_status = HOSTING_TASK_QUEUED;
     node_save($node);
     hosting_task_log($old_vid, 'queue', t("The task has been re-queued as task #!task", ['!task' => $node->nid]));
+    hosting_task_log($node->vid, 'queue', t("The task has been re-queued from task #!task", ['!task' => $old_nid]));
     drupal_goto("node/{$node->nid}");
   }
 }
