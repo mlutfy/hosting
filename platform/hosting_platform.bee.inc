@@ -14,7 +14,7 @@ function hosting_platform_bee_command() {
     ],
   ];
   $items['hosting-platform-update-status'] = [
-    'description' => 'Updates the platform status after a verify',
+    'description' => 'Updates the platform status',
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
     'callback' => 'bee_hosting_platform_update_status',
     'arguments' => [
@@ -39,12 +39,14 @@ function hosting_platform_bee_command() {
  * Called from Ansible
  */
 function bee_hosting_platform_update_status($arguments, $options) {
+  $node = node_load($arguments['nid']);
   if (isset($options['verified'])) {
-    db_query("UPDATE hosting_platform SET verified = :verified WHERE nid = :nid", [':verified' => (int) $options['verified'], ':nid' => (int) $arguments['nid']]);
+    $node->verified = $options['verified'];
   }
   if (isset($options['status'])) {
-    db_query("UPDATE hosting_platform SET status = :status WHERE nid = :nid", [':status' => (int) $options['status'], ':nid' => $arguments['nid']]);
+    $node->platform_status = $options['status'];
   }
+  node_save($node);
 }
 
 /**
