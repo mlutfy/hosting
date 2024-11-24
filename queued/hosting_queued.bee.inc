@@ -163,7 +163,7 @@ function bee_hosting_queued() {
       unset($tasks);
     }
 
-    sleep(5);
+    sleep(2);
   }
 }
 
