@@ -12,6 +12,8 @@
 // This is necessary for signal handling to work
 declare (ticks = 1);
 
+define('HOSTING_QUEUE_LOCK_TIMEOUT', 3600.0);
+
 /**
  * Implements hook_bee_command().
  */
