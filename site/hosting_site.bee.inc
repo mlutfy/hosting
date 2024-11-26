@@ -28,6 +28,15 @@ function hosting_site_bee_command() {
       ],
     ],
   ];
+  $items['hosting-site-login'] = [
+    'description' => 'Save a login link',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_site_login',
+    'arguments' => [
+      'nid' => bt('Node ID of the site'),
+      'url' => bt('One time login URL'),
+    ],
+  ];
   return $items;
 }
 
@@ -53,6 +62,21 @@ function bee_hosting_site_update_status($arguments, $options) {
   if (isset($options['status'])) {
     $node = node_load($arguments['nid']);
     $node->site_status = $options['status'];
+    $node->no_verify = TRUE;
     node_save($node);
   }
+}
+
+/**
+ * Store the login link in the cache so that the frontend can retrieve it
+ */
+function bee_hosting_site_login($arguments, $options) {
+  // Copied from hosting/site/hosting_site.drush.inc
+  // We need to store the timestamp too because expire only means it can be deleted
+  // after an amount of time, not will be deleted.
+  $cache = [
+    'expire' => strtotime("+24 hours"),
+    'link' => $arguments['url'],
+  ];
+  cache_set('hosting:site:' . $arguments['nid'] . ':login_link', $cache, 'cache', $cache['expire'] );
 }
