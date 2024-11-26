@@ -37,6 +37,15 @@ function hosting_site_bee_command() {
       'url' => bt('One time login URL'),
     ],
   ];
+  $items['hosting-site-backup'] = [
+    'description' => 'Save a backup filename',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_site_backup',
+    'arguments' => [
+      'nid' => bt('Node ID of the site'),
+      'filename' => bt('Backup filename'),
+    ],
+  ];
   return $items;
 }
 
@@ -79,4 +88,12 @@ function bee_hosting_site_login($arguments, $options) {
     'link' => $arguments['url'],
   ];
   cache_set('hosting:site:' . $arguments['nid'] . ':login_link', $cache, 'cache', $cache['expire'] );
+}
+
+/**
+ * Store the filename of a backup for a site
+ */
+function bee_hosting_site_backup($arguments, $options) {
+  $size = filesize("/var/aegir/backups/{$arguments['filename']}");
+  hosting_site_add_backup($arguments['nid'], 0, $arguments['filename'], '', $size);
 }
