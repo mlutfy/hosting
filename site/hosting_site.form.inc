@@ -248,11 +248,10 @@ function hosting_site_form($node, &$form_state) {
   _hosting_site_field($form, $node, 'profile', array(
     '#type' => 'radios',
     '#title' => t('Install profile'),
-    '#description' => t('The type of site to install.<br />
-                           The profile selected here determines the list of supported platforms below.'),
+    '#description' => t('The type of site to install.') . '<br />' . t('The profile selected here determines the list of supported platforms below.') . '<br>' . t('Only applies to Drupal'),
     '#options' => $profiles,
     '#default_value' => isset($node->profile) ? $node->profile : hosting_get_default_profile(key($profiles)),
-    '#required' => TRUE,
+    '#required' => FALSE,
     '#attributes' => array('class' => array("hosting-site-form-profile-options")),
     '#ajax' => array(
       'callback' => 'hosting_site_platform_callback',
@@ -268,31 +267,36 @@ function hosting_site_form($node, &$form_state) {
     $selected_profile = $form_state['values']['profile'];
   }
   else {
-    $selected_profile = hosting_package_instance_load(array('p.nid' => hosting_get_default_profile()))->nid;
+    $selected_profile = NULL; // hosting_package_instance_load(array('p.nid' => hosting_get_default_profile()))->nid;
   }
 
   // Load platforms for the selected profile.
-  $platforms = hosting_get_profile_platforms($selected_profile);
+  if ($selected_profile) {
+    $platforms = hosting_get_profile_platforms($selected_profile);
+  }
+  else {
+    $platforms = _hosting_get_platforms();
+  }
 
   $q = drupal_get_query_parameters();
   if (isset($q['platform']) && is_numeric($q['platform'])) {
     $default_platform = $q['platform'];
+    $node_platform = node_load($default_platform);
+    drupal_set_title(t('Create site on platform @name', ['@name' => $node_platform->title]));
+    if ($node_platform->software == 'Drupal') {
+      // Since platform is predetermined, limit the options based on the selected platform.
+      $selected_profile = hosting_package_instance_load(array('platform' => $default_platform, 'package_type' => 'profile'))->nid;
+      $platforms = hosting_get_profile_platforms($selected_profile);
 
-    // Since platform is predetermined, limit the options based on the selected platform.
-    $selected_profile = hosting_package_instance_load(array('platform' => $default_platform, 'package_type' => 'profile'))->nid;
-    $platforms = hosting_get_profile_platforms($selected_profile);
-
-    $form['profile']['#default_value'] = $selected_profile;
-    $form['profile']['#options'] = hosting_get_profiles($default_platform);
-    foreach ($form['profile']['#options'] as $id => &$name) {
-      $profile = hosting_package_instance_load(array('p.nid' => $id));
-      $name = theme('hosting_site_profile', array('profile' => $profile, 'html' => TRUE));
+      $form['profile']['#default_value'] = $selected_profile;
+      $form['profile']['#options'] = hosting_get_profiles($default_platform);
+      foreach ($form['profile']['#options'] as $id => &$name) {
+        $profile = hosting_package_instance_load(array('p.nid' => $id));
+        $name = theme('hosting_site_profile', array('profile' => $profile, 'html' => TRUE));
+      }
+      natcasesort($form['profile']['#options']);
+      reset($form['profile']['#options']);
     }
-    natcasesort($form['profile']['#options']);
-    reset($form['profile']['#options']);
-
-    // Set page title.
-    drupal_set_title(t('Create site on platform @name', array('@name' => $platforms[$default_platform])));
   }
   else {
     $default_platform = NULL;
@@ -406,12 +410,14 @@ function hosting_site_validate($node, &$form) {
     }
   }
 
-  if (!in_array($node->profile, $valid_options['profile']) && !isset($node->nid)) {
-    form_set_error('profile', t('Please choose a valid profile'));
-  }
-
-  if (!in_array($node->platform, $valid_options['platform']) && !isset($node->nid)) {
-    form_set_error('platform', t('Please choose a valid platform'));
+  $platform_node = node_load($node->platform);
+  if (empty($platform_node) || $platform_node->software == 'Drupal') {
+    if (!in_array($node->profile, $valid_options['profile']) && !isset($node->nid)) {
+      form_set_error('profile', t('Please choose a valid profile'));
+    }
+    if (!in_array($node->platform, $valid_options['platform']) && !isset($node->nid)) {
+      form_set_error('platform', t('Please choose a valid platform'));
+    }
   }
 
   // Check that we are selecting a valid language for this profile,
