@@ -57,11 +57,6 @@ function hosting_platform_schema() {
         'size' => 'big',
         'default' => NULL,
       ],
-      'version' => [
-        'type' => 'text',
-        'size' => 'big',
-        'default' => NULL,
-      ],
       'web_server' => [
         'type' => 'int',
         'not null' => TRUE,
@@ -86,18 +81,11 @@ function hosting_platform_schema() {
 }
 
 /**
- * Add the software and version column.
+ * Add the software column, remove makefile and make_working_copy
  */
 function hosting_platform_update_7500() {
   if (!db_field_exists('hosting_platform', 'software')) {
     db_add_field('hosting_platform', 'software', [
-      'type' => 'text',
-      'size' => 'big',
-      'default' => NULL,
-    ]);
-  }
-  if (!db_field_exists('hosting_platform', 'version')) {
-    db_add_field('hosting_platform', 'version', [
       'type' => 'text',
       'size' => 'big',
       'default' => NULL,
