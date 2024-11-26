@@ -1056,15 +1056,7 @@ function hosting_form_submit_messages($form, $form_state) {
       $t['!message'] = t('Changes will be applied once the task is completed.');
     }
 
-    // Display the message.
     drupal_set_message(t('%task task has been queued for @type %title. !message', $t));
-
-    // If using the hosting queue, mention the scheduled time.
-    $queues = hosting_get_queues();
-    if ($queues['tasks']['enabled']) {
-      $until = _hosting_queue_next_run('tasks') - REQUEST_TIME;
-      drupal_set_message(t('Task is scheduled to start in approximately %until.', array('%until' => format_interval($until))));
-    }
   }
 }
 

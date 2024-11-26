@@ -256,10 +256,6 @@ function hosting_platform_delete_action($node) {
  *   Set to TRUE to return only enabled platforms. Defaults to FALSE.
  * @return
  *   The list of platforms.
- * @todo
- *   Convert this to an EntityFieldQuery with conditions & tags (for JOINs).
- *   Tags will be unnecessary in D8 as JOINs are natively supported. See
- *   hosting_get_site_by_url() for an example of how to do this.
  */
 function _hosting_get_platforms($web_server = 0, $enabled_only = FALSE) {
   $return = array();

@@ -19,7 +19,7 @@ function hosting_site_bee_command() {
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
     'callback' => 'bee_hosting_site_update_status',
     'arguments' => [
-      'nid' => bt('Node ID of the platform'),
+      'nid' => bt('Node ID of the site'),
     ],
     'options' => [
       'status' => [
