@@ -46,6 +46,7 @@ function bee_hosting_platform_update_status($arguments, $options) {
   if (isset($options['status'])) {
     $node->platform_status = $options['status'];
   }
+  $node->no_verify = TRUE;
   node_save($node);
 }
 
