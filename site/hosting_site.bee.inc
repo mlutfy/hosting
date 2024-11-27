@@ -95,5 +95,6 @@ function bee_hosting_site_login($arguments, $options) {
  */
 function bee_hosting_site_backup($arguments, $options) {
   $size = filesize("/var/aegir/backups/{$arguments['filename']}");
-  hosting_site_add_backup($arguments['nid'], 0, $arguments['filename'], '', $size);
+  $description = db_query('SELECT value FROM hosting_task_arguments WHERE nid = :nid AND name = :name', [':nid' => $arguments['task'], ':name' => 'description'])->fetchField() ?? '';
+  hosting_site_add_backup($arguments['nid'], 0, $arguments['filename'], $description, $size);
 }
