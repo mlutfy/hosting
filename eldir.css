@@ -613,9 +613,10 @@ table.views-table { clear: both }
   #hosting-site-edit-info div.form-item {
     float:none;
     width:auto;
-    }
+    padding: 5px;
+    margin: 0;
+  }
 
-  #hosting-site-edit-info div.form-item,
   body.ntype-task #page div.node div#hosting-task-info div.form-item,
   body.aegir #page div.node div.content div.form-item {
     float:none;

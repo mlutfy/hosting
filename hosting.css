@@ -1,5 +1,5 @@
 /**
- * Overview 
+ * Overview
  */
 
 .hosting-site-list {clear:both;}
@@ -8,25 +8,23 @@
   position: relative;
 }
 
-.hosting-service-info, 
-#hosting-server-info, 
-#hosting-client-info, 
-#hosting-platform-info, 
+.hosting-service-info,
+#hosting-server-info,
+#hosting-client-info,
+#hosting-platform-info,
 #hosting-package-info,
-#hosting-site-info, 
-#hosting-task-info, 
-#hosting-site-edit-info, 
+#hosting-site-info,
+#hosting-task-info,
 #hosting-task-list {
   margin:0 0 1em;
 }
 
-#hosting-server-info .form-item, 
-#hosting-client-info .form-item, 
-#hosting-platform-info .form-item, 
+#hosting-server-info .form-item,
+#hosting-client-info .form-item,
+#hosting-platform-info .form-item,
 #hosting-package-info .form-item,
-#hosting-site-info .form-item, 
-#hosting-task-info .form-item, 
-#hosting-site-edit-info .form-item {
+#hosting-site-info .form-item,
+#hosting-task-info .form-item {
   margin:0 0 0.5em;
 }
 
@@ -34,12 +32,11 @@
   margin:0;
 }
 
-#hosting-server-info label, 
-#hosting-client-info label, 
-#hosting-site-edit-info label, 
-#hosting-platform-info label, 
-#hosting-package-info label, 
-#hosting-site-info label, 
+#hosting-server-info label,
+#hosting-client-info label,
+#hosting-platform-info label,
+#hosting-package-info label,
+#hosting-site-info label,
 #hosting-task-info label {
   display:inline;
 }
@@ -92,7 +89,7 @@ span.hosting-status {
 
 table.hosting-table .views-field-status {
   padding:0px;
-} 
+}
 
 span.hosting-status-icon {
   margin-right: -4px;
@@ -125,7 +122,7 @@ tr.hosting-success,
 }
 
 tr.hosting-warning .hosting-status,
-#hosting-package-comparison td.hosting-package-missing {  
+#hosting-package-comparison td.hosting-package-missing {
   background-image: url(images/icon-warning.png);
 }
 
@@ -178,7 +175,7 @@ div.hosting-task-retry form, div.hosting-task-retry form input {
   padding:0 !important;
 }
 
-#hosting-wizard-form-buttons { 
+#hosting-wizard-form-buttons {
   text-align: right;
   font-size: 4em;
   clear: both;
@@ -197,8 +194,8 @@ div.hosting-site-field-description {
  * Overlay
  */
 
-.ui-dialog-overlay, 
-.hosting-overlay { 
+.ui-dialog-overlay,
+.hosting-overlay {
   background:transparent url(images/overlay.png) repeat 0 0;
   position: absolute;
   display:block;
@@ -206,7 +203,7 @@ div.hosting-site-field-description {
   height: 100%;
 }
 
-.hosting-throbber { 
+.hosting-throbber {
   background:#FFF url(images/loader.gif) no-repeat center center;
   width: 30px;
   height:30px;
@@ -240,8 +237,9 @@ a.hosting-goto-site-link {
  */
 
 #hosting-site-edit-info label {
-  position: absolute;
-  left: 0;
+  display: inline-block;
+  min-width: 200px;
+  margin: 0;
 }
 
 .site-form-ajax-processed .form-text {
