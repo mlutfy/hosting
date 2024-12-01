@@ -505,6 +505,7 @@ function _hosting_node_link($nid, $title = NULL) {
     $title = isset($node->title) ? $node->title : NULL;
     // Override with the redirect target, when available.
     $title = $node->type == 'site' ? hosting_site_canonical_url($node) : $title;
+    $title = $node->type == 'package' ? $node->short_name : $title;
     // Override with the human-readable name, when available.
     $title = isset($node->human_name) && strlen($node->human_name) ? $node->human_name : $title;
   }
