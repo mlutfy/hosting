@@ -24,6 +24,12 @@ define('HOSTING_SITE_QUEUED', 0);
  */
 define('HOSTING_SITE_ENABLED', 1);
 
+/**
+ * Site environment
+ */
+define('HOSTING_SITE_ENVIRONMENT_DEVELOPMENT', 0);
+define('HOSTING_SITE_ENVIRONMENT_PRODUCTION', 1);
+
 include_once 'hosting_site.nodeapi.inc';
 include_once 'hosting_site.form.inc';
 include_once 'hosting_site.backups.inc';

@@ -358,6 +358,27 @@ function hosting_site_form($node, &$form_state) {
     );
   }
 
+  $form['environment'] = [
+    '#type' => 'radios',
+    '#title' => t('Environment'),
+    '#required' => TRUE,
+    '#description' => t('Crons are only enabled on production environments.'),
+    '#options' => [
+      HOSTING_SITE_ENVIRONMENT_DEVELOPMENT => t('Development'),
+      HOSTING_SITE_ENVIRONMENT_PRODUCTION => t('Production'),
+    ],
+    '#default_value' => $form['#node']->environment ?? HOSTING_SITE_ENVIRONMENT_DEVELOPMENT,
+    '#weight' => 5,
+  ];
+  $form['cron_interval'] = [
+    '#type' => 'select',
+    '#title' => t('CMS cron interval'),
+    '#options' => hosting_site_interval_options(),
+    '#description' => t('Applies to Drupal, Backdrop and WordPress'),
+    '#default_value' => $form['#node']->cron_interval,
+    '#weight' => 6,
+  ];
+
   return $form;
 }
 
@@ -455,4 +476,19 @@ function hosting_site_form_alter(&$form, &$form_state, $form_id) {
       '#value' => 1,
     );
   }
+}
+
+/**
+ * Returns an array of options for the CMS cron interval.
+ *
+ * @return
+ *   An associative array with the interval in seconds as key, and a
+ *   human-readable interval as value.
+ */
+function hosting_site_interval_options() {
+  $options = [
+    0 => t('Disabled'),
+  ];
+  $options += drupal_map_assoc(array(60, 300, 600, 900, 1800, 3600, 21600, 86400), 'format_interval');
+  return $options;
 }

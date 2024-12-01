@@ -107,6 +107,20 @@ function hosting_site_schema() {
         'not null' => TRUE,
         'default' => 0,
       ),
+      'environment' => [
+        'type' => 'int',
+        'size' => 'tiny',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => '0 = development, 1 = production',
+      ],
+      'cron_interval' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
     ),
     'primary key' => array('vid'),
   );
@@ -163,6 +177,36 @@ function hosting_site_update_7500() {
       'length' => 65,
       'not null' => TRUE,
       'default' => '',
+    ]);
+  }
+}
+
+/**
+ * Add the environment column.
+ */
+function hosting_site_update_7501() {
+  if (!db_field_exists('hosting_site', 'environment')) {
+    db_add_field('hosting_site', 'environment', [
+      'type' => 'int',
+      'size' => 'tiny',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
+      'description' => '0 = development, 1 = production',
+    ]);
+  }
+}
+
+/**
+ * Add the cron_interval column.
+ */
+function hosting_site_update_7502() {
+  if (!db_field_exists('hosting_site', 'cron_interval')) {
+    db_add_field('hosting_site', 'cron_interval', [
+      'type' => 'int',
+      'unsigned' => TRUE,
+      'not null' => TRUE,
+      'default' => 0,
     ]);
   }
 }

@@ -34,43 +34,7 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
   if ($node->site_status == HOSTING_SITE_ENABLED) {
     $node->content['info']['link'] = array(
       '#markup' => _hosting_site_goto_link($node),
-      '#weight' => -10,
-    );
-  }
-
-  if (is_numeric($node->client)) {
-    $node->content['info']['client'] = array(
-      '#type' => 'item',
-      '#title' => t('Client'),
-      '#markup' => _hosting_node_link($node->client),
-      '#weight' => 5,
-    );
-  }
-
-  $node->content['info']['verified'] = array(
-    '#type' => 'item',
-    '#title' => t('Verified'),
-    '#markup' => hosting_format_interval($node->verified),
-  );
-
-  $node->content['info']['platform'] = array(
-    '#type' => 'item',
-    '#title' => t('Platform'),
-    '#markup' => _hosting_node_link($node->platform),
-  );
-
-  if ($node->profile) {
-    $node->content['info']['profile'] = array(
-      '#type' => 'item',
-      '#title' => t('Install profile'),
-      '#markup' => _hosting_node_link($node->profile),
-    );
-  }
-  if ($node->site_language) {
-    $node->content['info']['site_language'] = array(
-      '#type' => 'item',
-      '#title' => t('Language'),
-      '#markup' => _hosting_language_name($node->site_language),
+      '#weight' => -50,
     );
   }
 
@@ -79,6 +43,38 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
       '#type' => 'item',
       '#title' => t('Status'),
       '#markup' => _hosting_site_status($node),
+      '#weight' => -20,
+    );
+  }
+
+  $node->content['info']['environment'] = [
+    '#type' => 'item',
+    '#title' => t('Environment'),
+    '#markup' => $node->environment == 1 ? t('Production') : t('Development'),
+    '#weight' => -18,
+  ];
+
+  $node->content['info']['platform'] = array(
+    '#type' => 'item',
+    '#title' => t('Platform'),
+    '#markup' => _hosting_node_link($node->platform),
+    '#weight' => -16,
+  );
+
+  if ($node->profile) {
+    $node->content['info']['profile'] = array(
+      '#type' => 'item',
+      '#title' => t('Install profile'),
+      '#markup' => _hosting_node_link($node->profile),
+      '#weight' => -7,
+    );
+  }
+  if ($node->site_language) {
+    $node->content['info']['site_language'] = array(
+      '#type' => 'item',
+      '#title' => t('Language'),
+      '#markup' => _hosting_language_name($node->site_language),
+      '#weight' => -6,
     );
   }
 
@@ -87,6 +83,7 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
       '#type' => 'item',
       '#title' => t('Database server'),
       '#markup' => _hosting_node_link($node->db_server),
+      '#weight' => -5,
     );
   }
 
@@ -95,8 +92,16 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
       '#type' => 'item',
       '#title' => t('Database name'),
       '#markup' => check_plain($node->db_name),
+      '#weight' => -4,
     );
   }
+
+  $node->content['info']['cron_interval'] = array(
+    '#type' => 'item',
+    '#title' => t('CMS cron interval'),
+    '#markup' => $node->cron_interval ? format_interval($node->cron_interval) : t('Disabled'),
+    '#weight' => -3,
+  );
 
   $node->content['info']['#suffix'] = '</div>';
 
@@ -334,6 +339,8 @@ function hosting_site_insert(&$node) {
       'cron_key' => $node->cron_key,
       'status' => $node->site_status ?? HOSTING_SITE_QUEUED,
       'verified' => $node->verified ?? 0,
+      'environment' => $node->environment ?? 0,
+      'cron_interval' => $node->cron_interval ?? 0,
     ))
     ->execute();
 }
@@ -382,6 +389,8 @@ function hosting_site_update(&$node) {
         'profile' => $node->profile,
         'language' => $node->site_language,
         'verified' => $node->verified,
+        'environment' => $node->environment,
+        'cron_interval' => $node->cron_interval,
       ))
       ->condition('vid', $node->vid)
       ->execute();
@@ -411,7 +420,7 @@ function hosting_site_load($nodes) {
   foreach ($nodes as $nid => &$node) {
     $additions = db_query(
       'SELECT  client, db_server, db_name, db_passwd, platform, profile, web_server, publish_path,
-        language AS site_language, last_cron, cron_key, s.status AS site_status,
+        language AS site_language, last_cron, cron_key, s.status AS site_status, s.environment, s.cron_interval,
 	p.status AS platform_status, s.verified, p.verified as platform_verified,
         p.software
       FROM {hosting_site} s
