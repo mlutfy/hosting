@@ -44,6 +44,7 @@ function hosting_site_bee_command() {
     'arguments' => [
       'nid' => bt('Node ID of the site'),
       'filename' => bt('Backup filename'),
+      'task' => bt('Node ID of the task'),
     ],
   ];
   return $items;
