@@ -7,11 +7,16 @@
 class hostingService_http extends hostingService {
   public $service = 'http';
   public $ssl_enabled = FALSE;
+  public $has_restart_cmd;
+
+  function __construct() {
+    parent::__construct();
+    $this->has_port = TRUE;
+    $this->has_restart_cmd = FALSE;
+  }
 }
 
-
 class hostingService_http_public extends hostingService_http {
-  protected $has_port = TRUE;
 
   function default_port() {
     return 80;
@@ -27,10 +32,13 @@ class hostingService_http_public extends hostingService_http {
 }
 
 class hostingService_http_apache extends hostingService_http_public {
-  public $type = 'apache';
-  public $name = 'Apache';
 
-  protected $has_restart_cmd = TRUE;
+  function __construct() {
+    parent::__construct();
+    $this->type = 'apache';
+    $this->name = 'Apache';
+    $this->has_restart_cmd = TRUE;
+  }
 
   function default_restart_cmd() {
     $command = '/usr/sbin/apache2ctl'; # a proper default for most of the world

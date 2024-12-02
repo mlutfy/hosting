@@ -9,15 +9,27 @@
  */
 class hostingService_db extends hostingService {
   public $service = 'db';
+  public $db_user = NULL;
+  public $db_passwd = NULL;
+
+  function __construct($node, $values = NULL) {
+    parent::__construct($node, $values);
+    $this->db_user = NULL;
+    $this->db_passwd = NULL;
+  }
 }
 
 /**
  * A MySQL specific db service implementation class.
  */
 class hostingService_db_mysql extends hostingService_db {
-  public $type = 'mysql';
-  public $name = 'MySQL';
-  public $has_port = TRUE;
+
+  function __construct($node, $values = NULL) {
+    parent::__construct($node, $values);
+    $this->type = 'mysql';
+    $this->name = 'MySQL';
+    $this->has_port = TRUE;
+  }
 
   function default_port() {
     return 3306;

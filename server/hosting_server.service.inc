@@ -15,18 +15,26 @@ class hostingService {
   public $service = '';
 
   // The service type for this class.  ie 'mysql', 'apache'
-  public $type = '';
+  public $type;
 
   // The human readable name for this service type.  ie 'MySQL', 'Apache'
-  public $name = '';
+  public $name;
 
   // Whether or not the service is available.
   public $available = 0;
 
-  protected $has_restart_cmd = FALSE;
-  protected $has_port = FALSE;
+  public $has_restart_cmd;
+  public $restart_cmd;
+  public $has_port;
+  public $port;
 
   function __construct($node, $values = NULL) {
+    $this->type = '';
+    $this->name = '';
+    $this->has_port = FALSE;
+    $this->port = NULL;
+    $this->has_restart_cmd = FALSE;
+    $this->restart_cmd = NULL;
     self::save($node);
     self::setValues($values);
   }
