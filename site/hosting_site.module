@@ -351,7 +351,7 @@ function hosting_site_hosting_tasks() {
   );
 
   $tasks['site']['login-reset'] = array(
-    'title' => t('Reset password'),
+    'title' => t('Login link'),
     'description' => t('Generate a one-time login reset url for this site.'),
   );
 
