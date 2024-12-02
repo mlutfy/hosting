@@ -61,7 +61,9 @@ function bee_hosting_site_task($arguments, $options) {
   if (empty($site->nid)) {
     throw new Exception('Site not found ' . $arguments['uri']);
   }
-  hosting_add_task($site->nid, $arguments['task']);
+  $task = hosting_add_task($site->nid, $arguments['task']);
+  // This is mostly for Ansible to parse, so not using bee_instant_message()
+  echo $task->nid . "\n";
 }
 
 /**
