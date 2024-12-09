@@ -9,8 +9,8 @@ class hostingService_http extends hostingService {
   public $ssl_enabled = FALSE;
   public $has_restart_cmd;
 
-  function __construct() {
-    parent::__construct();
+  function __construct($node, $values = NULL) {
+    parent::__construct($node, $values);
     $this->has_port = TRUE;
     $this->has_restart_cmd = FALSE;
   }
@@ -33,10 +33,10 @@ class hostingService_http_public extends hostingService_http {
 
 class hostingService_http_apache extends hostingService_http_public {
 
-  function __construct() {
-    parent::__construct();
+  function __construct($node, $values = NULL) {
+    parent::__construct($node, $values);
     $this->type = 'apache';
-    $this->name = 'Apache';
+    $this->name = 'Apache (not implemented)';
     $this->has_restart_cmd = TRUE;
   }
 

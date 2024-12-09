@@ -5,6 +5,16 @@
  */
 
 /**
+ * Implements hook_autoload_info() for Backdrop.
+ */
+function hosting_web_server_autoload_info() {
+  return [
+    'hostingService_http_public' => 'hosting_web_server.service.inc',
+    'hostingService_http_apache' => 'hosting_web_server.service.inc',
+  ];
+}
+
+/**
  * Implements hook_hosting_service().
  */
 function hosting_web_server_hosting_service() {
