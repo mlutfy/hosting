@@ -405,6 +405,7 @@ function hosting_server_form($node, &$form_state) {
         '#type' => 'radios',
         '#weight' => -99,
         '#options' => $options,
+        '#title' => check_plain($service['title']),
         '#default_value' => isset($node->services[$name]->available) && $node->services[$name]->available ? $node->services[$name]->type : 'null',
       );
 
