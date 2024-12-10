@@ -6,7 +6,6 @@
  */
 
 include_once "hosting_server.service.inc";
-include_once "hosting.ip.inc";
 
 /**
  * This server has been deleted.
