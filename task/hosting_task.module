@@ -1165,13 +1165,13 @@ function hosting_task_view($node, $view_mode, $langcode = NULL) {
       $node->content['info']['started'] = array(
         '#type' => 'item',
         '#title' => t('Started'),
-        '#markup' => format_date($node->executed),
+        '#markup' => $node->executed ? format_date($node->executed) : '',
         '#weight' => 1,
       );
       $node->content['info']['delta'] = array(
         '#type' => 'item',
         '#title' => t('Processing time'),
-        '#markup' => format_interval(REQUEST_TIME - $node->executed),
+        '#markup' => $node->executed ? format_interval(REQUEST_TIME - $node->executed) : '',
         '#weight' => 2,
       );
     }
