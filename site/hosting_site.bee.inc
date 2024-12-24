@@ -28,6 +28,17 @@ function hosting_site_bee_command() {
       ],
     ],
   ];
+  $items['hosting-site-clone'] = [
+    'description' => 'Clone a site node',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_site_clone',
+    'arguments' => [
+      'nid' => bt('Node ID of the site to clone'),
+      'newuri' => bt('URI of the new site'),
+      'newplatform' => bt('Destination platform'),
+      'newdbserver' => bt('Destination database server'),
+    ],
+  ];
   $items['hosting-site-login'] = [
     'description' => 'Save a login link',
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
@@ -100,4 +111,31 @@ function bee_hosting_site_backup($arguments, $options) {
   $size = filesize("/var/aegir/backups/{$arguments['filename']}");
   $description = db_query('SELECT value FROM hosting_task_arguments WHERE nid = :nid AND name = :name', [':nid' => $arguments['task'], ':name' => 'description'])->fetchField() ?? '';
   hosting_site_add_backup($arguments['nid'], 0, $arguments['filename'], $description, $size);
+}
+
+/**
+ * Clone a site node
+ */
+function bee_hosting_site_clone($arguments, $options) {
+  $node = node_load($arguments['nid']);
+  $new = clone $node;
+  $new->is_new = TRUE;
+  $new->no_verify = TRUE;
+  // Destination URI and platform/db
+  $new->title = $arguments['newuri'];
+  $new->platform = $arguments['newplatform'];
+  $new->db_server = $arguments['newdbserver'];
+  // Generate new DB credentials
+  $new->db_name = hosting_site_db_utils::suggest_db_name($new->title)
+  $new->db_passwd = hosting_site_db_utils::generate_password();
+  $new->site_status = HOSTING_SITE_QUEUED;
+  // Not sure if this is necessary
+  $new->status = HOSTING_SITE_QUEUED;
+  // Make sure it saves as a new node
+  $new->nid = NULL;
+  $new->vid = NULL;
+  $new->tnid = NULL;
+  $new = node_submit($new);
+  node_save($new);
+  echo $new->nid . "\n";
 }
