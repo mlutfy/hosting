@@ -126,7 +126,7 @@ function bee_hosting_site_clone($arguments, $options) {
   $new->platform = $arguments['newplatform'];
   $new->db_server = $arguments['newdbserver'];
   // Generate new DB credentials
-  $new->db_name = hosting_site_db_utils::suggest_db_name($new->title)
+  $new->db_name = hosting_site_db_utils::suggest_db_name($new->title);
   $new->db_passwd = hosting_site_db_utils::generate_password();
   $new->site_status = HOSTING_SITE_QUEUED;
   // Not sure if this is necessary
