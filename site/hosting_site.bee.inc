@@ -117,6 +117,16 @@ function bee_hosting_site_backup($arguments, $options) {
  * Clone a site node
  */
 function bee_hosting_site_clone($arguments, $options) {
+  // Assuming we validated in the form layer that we cannot clone to an
+  // existing site and that we want to make Ansible somewhat idempotent,
+  // we avoid a fatal if the clone node already exists, even if a bit
+  // unusual
+  $test = hosting_get_site_by_url($arguments['newuri']);
+  if (!empty($test)) {
+    echo $test->nid . "\n";
+    return;
+  }
+  // Create a new node
   $node = node_load($arguments['nid']);
   $new = clone $node;
   $new->is_new = TRUE;
@@ -130,7 +140,7 @@ function bee_hosting_site_clone($arguments, $options) {
   $new->db_passwd = hosting_site_db_utils::generate_password();
   $new->site_status = HOSTING_SITE_QUEUED;
   // Not sure if this is necessary
-  $new->status = HOSTING_SITE_QUEUED;
+  $new->status = 1;
   // Make sure it saves as a new node
   $new->nid = NULL;
   $new->vid = NULL;
