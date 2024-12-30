@@ -31,6 +31,11 @@ function hosting_platform_bee_command() {
       ],
     ],
   ];
+  $items['hosting-platform-setup-aegir'] = [
+    'description' => 'Initial Aegir setup (setup the Aegir platform, frontend site, etc)',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_platform_setup_aegir',
+  ];
   return $items;
 }
 
@@ -102,4 +107,60 @@ function bee_hosting_platform_detect_packages($arguments, $options) {
       hosting_package_instance_save($instance);
     }
   }
+}
+
+function bee_hosting_platform_setup_aegir($arguments, $options) {
+  $platform = NULL;
+  $nid = db_query('SELECT nid FROM hosting_platform WHERE publish_path = :path', [':path' => '/var/aegir/admin/web'])->fetchField();
+
+  if ($nid) {
+    echo "Platform already exists\n";
+    exit(1);
+  }
+
+  // Create the webserver
+  $server = new Node();
+  $server->title = 'localhost';
+  $server->type = 'server';
+  $server->status = 1;
+  $server->uid = 1;
+  $server->services = [];
+  // @todo - services are complicated...
+  // $server->services['db'] = new hostingService_db_mysql();
+  // $server->services['http']->available = TRUE;
+  $server = node_submit($server);
+  node_save($server);
+
+  // Create the platform
+  $platform = new Node();
+  $platform->title = 'Aegir';
+  $platform->type = 'platform';
+  $platform->publish_path = '/var/aegir/admin/web';
+  $platform->software = 'Backdrop';
+  $platform->web_server = $server->nid;
+  $platform->status = 1;
+  $platform->uid = 1;
+  $platform = node_submit($platform);
+  node_save($platform);
+
+  // Find the database password
+  $settings = file_get_contents('/var/aegir/admin/web/settings.php');
+  preg_match('#aegir:([^@]+)@[^/]+/aegir#', $settings, $matches);
+
+  // Create the Aegir site
+  $site = new Node();
+  $site->title = config_get('system.core', 'site_name');
+  $site->type = 'site';
+  $site->platform = $platform->nid;
+  // @todo Assumes mysql runs on localhost
+  $site->db_server = $server->nid;
+  $site->db_name = 'aegir';
+  $site->db_passwd = $matches[1];
+  $site->status = 1;
+  $site->uid = 1;
+  $site = node_submit($site);
+  node_save($site);
+
+  // Flush the Ansible inventory
+  backdrop_flush_all_caches();
 }
