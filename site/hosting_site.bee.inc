@@ -35,8 +35,8 @@ function hosting_site_bee_command() {
     'arguments' => [
       'nid' => bt('Node ID of the site to clone'),
       'newuri' => bt('URI of the new site'),
-      'newplatform' => bt('Destination platform'),
-      'newdbserver' => bt('Destination database server'),
+      'newplatform' => bt('Destination platform Node ID'),
+      'newdbserver' => bt('Destination database server Node ID'),
     ],
   ];
   $items['hosting-site-login'] = [
@@ -146,6 +146,8 @@ function bee_hosting_site_clone($arguments, $options) {
   $new->vid = NULL;
   $new->tnid = NULL;
   $new = node_submit($new);
+  unset($new->path);
+  unset($new->hosting_name);
   node_save($new);
   echo $new->nid . "\n";
 }
