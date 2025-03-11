@@ -23,7 +23,6 @@ function hosting_hosting_site_context_options(&$task) {
   if ($task->task_type != 'import' && $task->task_type != 'delete' && $task->task_type != 'verify') {
     $task->options['client_email'] = $user->mail;
   }
-  $task->context_options['client_name'] = $client->uname;
 
   // Set "install_method" property, only if there is one present on the site node.
   // "profile" is used by default, we don't have to set it here.
