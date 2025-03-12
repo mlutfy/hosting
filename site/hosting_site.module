@@ -39,6 +39,11 @@ if (module_exists('hosting_quota')) {
   include_once 'hosting_site.quota.inc';
 }
 
+// Otherwise site creation fails on Aegir-on-Drupal7
+if (!defined('BACKDROP_ROOT')) {
+  include_once 'includes/db_utils.php';
+}
+
 /**
  * Implements hook_autoload_info() for Backdrop.
  */
