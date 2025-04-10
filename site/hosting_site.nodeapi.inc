@@ -403,17 +403,6 @@ function hosting_site_update(&$node) {
 }
 
 /**
- * Implements hook_node_update().
- */
-function hosting_site_node_update($node) {
-  if ($node->type == "site") {
-    if ((isset($node->no_verify) && $node->no_verify) == FALSE) {
-      hosting_add_task($node->nid, 'verify');
-    }
-  }
-}
-
-/**
  * Implements hook_load().
  */
 function hosting_site_load($nodes) {
