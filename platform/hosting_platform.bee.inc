@@ -145,7 +145,7 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
 
   // Find the database password
   $settings = file_get_contents('/var/aegir/admin/web/settings.php');
-  preg_match('#aegir:([^@]+)@[^/]+/aegir#', $settings, $matches);
+  preg_match("#'password' => '([^']+)',#", $settings, $matches);
 
   // Create the Aegir site
   $site = new Node();
