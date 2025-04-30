@@ -152,6 +152,8 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
   $site->title = config_get('system.core', 'site_name');
   $site->type = 'site';
   $site->platform = $platform->nid;
+  // Production environment
+  $site->environment = 1;
   // @todo Assumes mysql runs on localhost
   $site->db_server = $server->nid;
   $site->db_name = 'aegir';
