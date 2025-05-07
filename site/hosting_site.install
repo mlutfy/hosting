@@ -242,7 +242,8 @@ function hosting_site_update_7503() {
       if (!empty($site->db_passwd)) {
         continue;
       }
-      $drushrc = $site->publish_path . '/sites/' . $site->title . '/drushrc.php';
+      $platform = node_load($site->wpplatform);
+      $drushrc = $platform->publish_path . '/sites/' . $site->title . '/drushrc.php';
       if (file_exists($drushrc)) {
         global $options;
         $options['db_passwd'] = NULL;
