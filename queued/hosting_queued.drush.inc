@@ -149,7 +149,14 @@ function drush_hosting_queued() {
           sleep(1);
 
           // Execute the task.
-          hosting_task_execute($task, array('interactive' => TRUE));
+          if (file_exists('/usr/local/aegir-ansible-playbooks/')) {
+            // Run using Ansible
+            hosting_civicrm_ansible_execute($task);
+          }
+          else {
+            // Classic old Aegir on Drupal7
+            hosting_task_execute($task, ['interactive' => TRUE]);
+          }
 
           // Delay for a configurable amount of time.
           $delay = variable_get('hosting_queued_post_task_delay', 0);
