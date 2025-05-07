@@ -218,7 +218,7 @@ function hosting_site_update_7503() {
   // Drupal sites
   if (function_exists('hosting_civicrm_ansible_get_all_sites')) {
     $nids = hosting_civicrm_ansible_get_all_sites(TRUE);
-    $site = node_load_multiple($nids);
+    $sites = node_load_multiple($nids);
     foreach ($sites as $site) {
       if (!empty($site->db_passwd)) {
         continue;
