@@ -210,3 +210,48 @@ function hosting_site_update_7502() {
     ]);
   }
 }
+
+/**
+ * Fill in empty db_passwd using drushrc.php.
+ */
+function hosting_site_update_7503() {
+  // Drupal sites
+  if (function_exists('hosting_civicrm_ansible_get_all_sites')) {
+    $nids = hosting_civicrm_ansible_get_all_sites(TRUE);
+    $site = node_load_multiple($nids);
+    foreach ($sites as $site) {
+      if (!empty($site->db_passwd)) {
+        continue;
+      }
+      $drushrc = $site->publish_path . '/sites/' . $site->title . '/drushrc.php';
+      if (file_exists($drushrc)) {
+        global $options;
+        $options['db_passwd'] = NULL;
+        require $drushrc;
+        if (!empty($options['db_passwd'])) {
+          $site->db_passwd = $options['db_passwd'];
+          node_save($site);
+        }
+      }
+    }
+  }
+  // WordPress sites
+  if (function_exists('hosting_get_wpsites_by_status')) {
+    $sites = hosting_get_wpsites_by_status(null, HOSTING_WPSITE_ENABLED);
+    foreach ($sites as $site) {
+      if (!empty($site->db_passwd)) {
+        continue;
+      }
+      $drushrc = $site->publish_path . '/sites/' . $site->title . '/drushrc.php';
+      if (file_exists($drushrc)) {
+        global $options;
+        $options['db_passwd'] = NULL;
+        require $drushrc;
+        if (!empty($options['db_passwd'])) {
+          $site->db_passwd = $options['db_passwd'];
+          node_save($site);
+        }
+      }
+    }
+  }
+}
