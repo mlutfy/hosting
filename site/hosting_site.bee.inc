@@ -131,6 +131,8 @@ function bee_hosting_site_clone($arguments, $options) {
   $new = clone $node;
   $new->is_new = TRUE;
   $new->no_verify = TRUE;
+  // Don't install, import the SQL dump
+  $new->import = TRUE;
   // Destination URI and platform/db
   $new->title = $arguments['newuri'];
   $new->platform = $arguments['newplatform'];
