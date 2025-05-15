@@ -152,7 +152,7 @@ function hosting_task_migrate_form($node) {
 
 
   drupal_add_js(drupal_get_path('module', 'hosting_migrate') . '/hosting_migrate.js');
-  $packages = array();
+  $packages = [];
 
   $site_profile = node_load($node->profile);
 
@@ -170,37 +170,26 @@ function hosting_task_migrate_form($node) {
 
   // Don't show the current platform if it's locked
   if (!_hosting_platform_is_locked($node->platform)) {
-    $form[$node->platform]['target_platform'] = array(
+    $form[$node->platform]['target_platform'] = [
       '#type' => 'radio',
       '#title' => check_plain($site_platform->title),
       "#return_value" => $node->platform,
       "#default_value" => $node->platform,
       '#description' => t("Current platform"),
-      '#parents' => array('parameters', 'target_platform'),
-    );
+      '#parents' => ['parameters', 'target_platform'],
+    ];
     $has_platform_available = TRUE;
   }
   foreach ($profile_platform_instances as $profile_instance) {
     if (($profile_instance->rid != $node->platform) && (in_array($profile_instance->rid, $valid_options['platform']))) {
-      $status = hosting_package_comparison($node->nid, $profile_instance->iid);
-
-      $description = t("Upgrades: !upgrades, Warnings: !missing, Errors: !errors | <a href='!url' class='hosting-package-comparison-link'>Compare platforms</a>",
-        array(
-        '!upgrades' => $status['upgrade'],
-        '!missing' => $status['missing'] + $status['downgrade'],
-        '!errors' => $status['error'],
-        '!url' => url('hosting/migrate/compare/' . $node->nid . '/' . $profile_instance->iid),
-      )
-        );
       $platform = node_load($profile_instance->rid);
-
-      $form[$platform->nid]['target_platform'] = array(
+      $form[$platform->nid]['target_platform'] = [
         '#type' => 'radio',
         '#title' => check_plain($platform->title),
         '#parents' => array('parameters', 'target_platform'),
         "#return_value" => $platform->nid,
         '#description' => $description,
-      );
+      ];
       if ($status['error']) {
         $form[$platform->nid]['target_platform']['#disabled'] = TRUE;
       }
@@ -216,6 +205,8 @@ function hosting_task_migrate_form($node) {
 
 /**
  * Compare package schema versions between the current and target platform in temp tables
+ *
+ * @deprecated
  */
 function hosting_migrate_comparison($current, $target) {
 
