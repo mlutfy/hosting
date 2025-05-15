@@ -374,6 +374,11 @@ function hosting_site_update(&$node) {
     $node->client = 0; // deprecated
     if ($node->site_status == HOSTING_SITE_DELETED) {
       $node->no_verify = TRUE;
+      // If the site status is deleted, delete the context
+      // otherwise we will not be able to create a new site with the same title
+      db_delete('hosting_context')
+        ->condition('nid', $node->nid)
+        ->execute();
     }
 
     db_update('hosting_site')
