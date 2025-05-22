@@ -1028,32 +1028,29 @@ function hosting_form_alter(&$form, &$form_state, $form_id) {
  * Submit handler for hosting node forms: Display helpful messages.
  */
 function hosting_form_submit_messages($form, $form_state) {
-
   // Only act on sites, platforms, & servers.
   if (in_array($form_state['node']->type, array('site', 'platform', 'server'))) {
-
     // Translation array.
-    $t = array(
+    $t = [
       '@type' => $form_state['node']->type,
       '%title' => $form_state['values']['title'],
       '%task' => t('Verify'),
-    );
+    ];
 
     // If this is an add form...
     if (!isset($form_state['node']->nid)) {
-      $t['!message'] = t('It will be available once the task is completed.');
-
       // If node is a site, task is "install".
       if ($form_state['node']->type == 'site') {
         $t['%task'] = t('Install');
       }
+      drupal_set_message(t('%task task has been queued for @type %title.', $t)) . ' ' . t('It will be available once the task is completed.');
     }
-    // If this is an edit form, mention changes being applied.
+    // If this is a site edit form, verify might need to be run (less relevant for Platforms)
     else {
-      $t['!message'] = t('Changes will be applied once the task is completed.');
+      if ($form_state['node']->type == 'site') {
+        drupal_set_message(t('To apply any changes, please run a Verify task.'));
+      }
     }
-
-    drupal_set_message(t('%task task has been queued for @type %title. !message', $t));
   }
 }
 
