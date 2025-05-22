@@ -60,6 +60,10 @@ class hostingService {
   }
 
   public function load() {
+    // This might not be necessary anymore - and sometimes causes PHP warnings
+    if (empty($this->server->vid)) {
+      return;
+    }
     $this->mergeData("SELECT port, restart_cmd, available
                       FROM {hosting_service}
                       WHERE vid = :vid
