@@ -151,5 +151,7 @@ function bee_hosting_site_clone($arguments, $options) {
   unset($new->path);
   unset($new->hosting_name);
   node_save($new);
+  // Refresh the inventory
+  backdrop_flush_all_caches();
   echo $new->nid . "\n";
 }
