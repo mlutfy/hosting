@@ -61,6 +61,13 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
     '#weight' => -16,
   );
 
+  $node->content['info']['site_path'] = [
+    '#type' => 'item',
+    '#title' => t('Site path'),
+    '#markup' => $node->publish_path . '/sites/' . $node->title,
+    '#weight' => -16,
+  ];
+
   if ($node->profile) {
     $node->content['info']['profile'] = array(
       '#type' => 'item',
@@ -87,20 +94,24 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
     );
   }
 
-  if ($node->db_name) {
-    $node->content['info']['db_name'] = array(
-      '#type' => 'item',
-      '#title' => t('Database name'),
-      '#markup' => check_plain($node->db_name),
-      '#weight' => -4,
-    );
-  }
+  $node->content['info']['db_name'] = [
+    '#type' => 'item',
+    '#title' => t('Database name'),
+    '#markup' => !empty($node->db_name) ? check_plain($node->db_name) : 'MISSING',
+    '#weight' => -4,
+  ];
+  $node->content['info']['db_passwd'] = [
+    '#type' => 'item',
+    '#title' => t('Database password'),
+    '#markup' => !empty($node->db_passwd) ? 'ok' : 'MISSING',
+    '#weight' => -3,
+  ];
 
   $node->content['info']['cron_interval'] = array(
     '#type' => 'item',
     '#title' => t('CMS cron interval'),
     '#markup' => $node->cron_interval ? format_interval($node->cron_interval) : t('Disabled'),
-    '#weight' => -3,
+    '#weight' => -2,
   );
 
   $node->content['info']['#suffix'] = '</div>';
