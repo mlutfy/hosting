@@ -220,18 +220,22 @@ function hosting_site_update_7503() {
     $nids = hosting_civicrm_ansible_get_all_sites(TRUE);
     $sites = node_load_multiple($nids);
     foreach ($sites as $site) {
-      if (!empty($site->db_passwd)) {
+      if (!empty($site->db_passwd) && !empty($site->db_name)) {
         continue;
       }
       $drushrc = $site->publish_path . '/sites/' . $site->title . '/drushrc.php';
       if (file_exists($drushrc)) {
         global $options;
+        $options['db_name'] = NULL;
         $options['db_passwd'] = NULL;
         require $drushrc;
-        if (!empty($options['db_passwd'])) {
-          $site->db_passwd = $options['db_passwd'];
-          node_save($site);
+        if (empty($site->db_name) && !empty($options['db_name'])) {
+          $site->db_name = $options['db_name'];
         }
+        if (empty($site->db_passwd) && !empty($options['db_passwd'])) {
+          $site->db_passwd = $options['db_passwd'];
+        }
+        node_save($site);
       }
     }
   }
@@ -239,19 +243,23 @@ function hosting_site_update_7503() {
   if (function_exists('hosting_get_wpsites_by_status')) {
     $sites = hosting_get_wpsites_by_status(null, HOSTING_WPSITE_ENABLED);
     foreach ($sites as $site) {
-      if (!empty($site->db_passwd)) {
+      if (!empty($site->db_passwd) && !empty($site->db_name)) {
         continue;
       }
       $platform = node_load($site->wpplatform);
       $drushrc = $platform->publish_path . '/sites/' . $site->title . '/drushrc.php';
       if (file_exists($drushrc)) {
         global $options;
+        $options['db_name'] = NULL;
         $options['db_passwd'] = NULL;
         require $drushrc;
-        if (!empty($options['db_passwd'])) {
-          $site->db_passwd = $options['db_passwd'];
-          node_save($site);
+        if (empty($site->db_name) && !empty($options['db_name'])) {
+          $site->db_name = $options['db_name'];
         }
+        if (empty($site->db_passwd) && !empty($options['db_passwd'])) {
+          $site->db_passwd = $options['db_passwd'];
+        }
+        node_save($site);
       }
     }
   }
