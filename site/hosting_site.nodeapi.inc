@@ -393,11 +393,11 @@ function hosting_site_update(&$node) {
     }
 
     db_update('hosting_site')
-      ->fields(array(
-        'client' => $node->client,
+      ->fields([
         'db_server' => $node->db_server,
         'db_name' => $node->db_name,
-        'db_passwd' => $node->db_passwd,
+	// This is not exposed in the UI at the moment, and risks accidentally wiping the password
+        // 'db_passwd' => $node->db_passwd,
         'platform' => $node->platform,
         'last_cron' => $node->last_cron,
         'cron_key' => $node->cron_key,
@@ -407,7 +407,7 @@ function hosting_site_update(&$node) {
         'verified' => $node->verified,
         'environment' => $node->environment,
         'cron_interval' => $node->cron_interval,
-      ))
+      ])
       ->condition('vid', $node->vid)
       ->execute();
     
