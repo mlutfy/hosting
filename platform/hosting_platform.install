@@ -73,6 +73,21 @@ function hosting_platform_schema() {
         'not null' => TRUE,
         'default' => 0,
       ],
+      'site_post_install_cmd' => [
+        'type' => 'text',
+        'size' => 'big',
+        'default' => NULL,
+      ],
+      'site_post_import_cmd' => [
+        'type' => 'text',
+        'size' => 'big',
+        'default' => NULL,
+      ],
+      'site_post_verify_cmd' => [
+        'type' => 'text',
+        'size' => 'big',
+        'default' => NULL,
+      ],
     ),
     'primary key' => array('vid'),
   );
@@ -94,5 +109,32 @@ function hosting_platform_update_7500() {
   if (db_field_exists('hosting_platform', 'makefile')) {
     db_drop_field('hosting_platform', 'makefile');
     db_drop_field('hosting_platform', 'make_working_copy');
+  }
+}
+
+/**
+ * Add the site_post_install_cmd, import, verify columns
+ */
+function hosting_platform_update_7501() {
+  if (!db_field_exists('hosting_platform', 'site_post_install_cmd')) {
+    db_add_field('hosting_platform', 'site_post_install_cmd', [
+      'type' => 'text',
+      'size' => 'big',
+      'default' => NULL,
+    ]);
+  }
+  if (!db_field_exists('hosting_platform', 'site_post_import_cmd')) {
+    db_add_field('hosting_platform', 'site_post_import_cmd', [
+      'type' => 'text',
+      'size' => 'big',
+      'default' => NULL,
+    ]);
+  }
+  if (!db_field_exists('hosting_platform', 'site_post_verify_cmd')) {
+    db_add_field('hosting_platform', 'site_post_verify_cmd', [
+      'type' => 'text',
+      'size' => 'big',
+      'default' => NULL,
+    ]);
   }
 }
