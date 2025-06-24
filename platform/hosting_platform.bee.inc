@@ -118,18 +118,24 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
     exit(1);
   }
 
+  // Check if a webserver already exists (ex: D7->Backdrop upgrades)
+  $server_nid = db_query("select nid from node where type = 'server' and title in ('127.0.0.1', 'localhost')")->fetchField();
+
   // Create the webserver
-  $server = new Node();
-  $server->title = 'localhost';
-  $server->type = 'server';
-  $server->status = 1;
-  $server->uid = 1;
-  $server->services = [];
-  // @todo - services are complicated...
-  // $server->services['db'] = new hostingService_db_mysql();
-  // $server->services['http']->available = TRUE;
-  $server = node_submit($server);
-  node_save($server);
+  if (!$server_nid) {
+    $server = new Node();
+    $server->title = 'localhost';
+    $server->type = 'server';
+    $server->status = 1;
+    $server->uid = 1;
+    $server->services = [];
+    // @todo - services are complicated...
+    // $server->services['db'] = new hostingService_db_mysql();
+    // $server->services['http']->available = TRUE;
+    $server = node_submit($server);
+    node_save($server);
+    $server_nid = $server->nid;
+  }
 
   // Create the platform
   $platform = new Node();
@@ -137,7 +143,7 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
   $platform->type = 'platform';
   $platform->publish_path = '/var/aegir/admin/web';
   $platform->software = 'Backdrop';
-  $platform->web_server = $server->nid;
+  $platform->web_server = $server_nid;
   $platform->status = 1;
   $platform->uid = 1;
   $platform = node_submit($platform);
@@ -148,6 +154,7 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
   preg_match("#'password' => '([^']+)',#", $settings, $matches);
 
   // Create the Aegir site
+  // @todo If upgrading from Drupal7, move the existing node over? delete the old hostmaster platform?
   $site = new Node();
   $site->title = config_get('system.core', 'site_name');
   $site->type = 'site';
@@ -155,7 +162,7 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
   // Production environment
   $site->environment = 1;
   // @todo Assumes mysql runs on localhost
-  $site->db_server = $server->nid;
+  $site->db_server = $server_nid;
   $site->db_name = 'aegir';
   $site->db_passwd = $matches[1];
   $site->status = 1;
