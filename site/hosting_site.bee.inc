@@ -39,6 +39,17 @@ function hosting_site_bee_command() {
       'newdbserver' => bt('Destination database server Node ID'),
     ],
   ];
+  $items['hosting-site-migrate'] = [
+    'description' => 'Migrate a site node',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_site_migrate',
+    'arguments' => [
+      'nid' => bt('Node ID of the site to migrate'),
+      'newuri' => bt('URI of the new site'),
+      'newplatform' => bt('Destination platform Node ID'),
+      'newdbserver' => bt('Destination database server Node ID'),
+    ],
+  ];
   $items['hosting-site-login'] = [
     'description' => 'Save a login link',
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
@@ -154,4 +165,40 @@ function bee_hosting_site_clone($arguments, $options) {
   // Refresh the inventory
   backdrop_flush_all_caches();
   echo $new->nid . "\n";
+}
+
+/**
+ * Migrate a site node
+ */
+function bee_hosting_site_migrate($arguments, $options) {
+  // Assuming we validated in the form layer that we cannot clone to an
+  // existing site and that we want to make Ansible somewhat idempotent,
+  // we avoid a fatal if the clone node already exists, even if a bit
+  // unusual
+  // @todo FIXME This was copied from the clone function
+  // and would not be relevant if we are only migrating the database
+  $test = hosting_get_site_by_url($arguments['newuri']);
+  if (!empty($test)) {
+    echo $test->nid . "\n";
+    return;
+  }
+  // Update the existing node
+  $node = node_load($arguments['nid']);
+  // Destination URI and platform/db
+  $node->title = $arguments['newuri'];
+  $node->platform = $arguments['newplatform'];
+  $node->db_server = $arguments['newdbserver'];
+  // @todo FIXME for database migration
+  // Generate new DB credentials
+  // $node->db_name = hosting_site_db_utils::suggest_db_name($node->title);
+  // $node->db_passwd = hosting_site_db_utils::generate_password();
+  // $node->site_status = HOSTING_SITE_QUEUED;
+  // Not sure if this is necessary
+  $node = node_submit($node);
+  unset($node->path);
+  unset($node->hosting_name);
+  node_save($node);
+  // Refresh the inventory
+  backdrop_flush_all_caches();
+  echo $node->nid . "\n";
 }
