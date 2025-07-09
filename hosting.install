@@ -52,11 +52,3 @@ function hosting_schema() {
   );
   return $schema;
 }
-
-/**
- * Implements hook_install().
- */
-function hosting_install() {
-  hosting_create_roles();
-  variable_set('error_level', ERROR_REPORTING_HIDE);
-}
