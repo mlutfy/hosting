@@ -170,6 +170,10 @@ a.hosting-button-enabled,
   margin: 0 0.5em 0 0;
 }
 
+div.hosting-task-retry {
+  /* so that it fits on the same line as the "jump to first warnin"  */
+  float: left;
+}
 div.hosting-task-retry form, div.hosting-task-retry form input {
   margin:0 !important;
   padding:0 !important;

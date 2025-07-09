@@ -730,6 +730,13 @@ a.hosting-button-enabled {
   background:#6ac;
 }
 
+/* Ex: "Jump to first warning" on the same line as Retry */
+article.node-task a.hosting-button-enabled {
+  float: right;
+  width: auto;
+  padding: 0 15px;
+}
+
 .hosting-button-disabled {
   color:#eee;
   background:#aaa;
