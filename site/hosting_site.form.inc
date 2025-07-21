@@ -100,11 +100,9 @@ function hosting_site_available_options($node, $platform = NULL) {
   // Cast to object if it's an array.
   $node = (is_array($node)) ? (object) $node : clone $node;
 
-  $return = array();
-
-  $return['profile'] = array();
-  $return['platform'] = array();
-  $return['site_language'] = array();
+  $return = [];
+  $return['profile'] = [];
+  $return['platform'] = [];
 
   if (!hosting_feature('client')) {
     // Setting the return value of a text field to null,
@@ -206,13 +204,10 @@ function hosting_site_available_options($node, $platform = NULL) {
     $node->platform = $return['platform'][0];
   }
 
-  $return['site_language'] = array_keys((array) hosting_get_profile_languages($node->profile, $node->platform));
-
   drupal_alter('hosting_site_options', $return, $node);
 
   return $return;
 }
-
 
 /**
  * Implements hook_form().
@@ -331,16 +326,14 @@ function hosting_site_form($node, &$form_state) {
   else {
     $selected_platform = NULL;
   }
-  $languages = hosting_get_profile_languages($selected_profile, $selected_platform);
-  _hosting_site_field($form, $node, 'site_language', array(
-    '#type' => ((count($languages) > 10) ? 'select' : 'radios'),
+  _hosting_site_field($form, $node, 'site_language', [
+    '#type' => 'textfield',
     '#title' => t('Language'),
-    '#description' => t('The language of site being installed.'),
-    '#options' => $languages,
+    '#description' => t('The language of site being installed.') . ' ' . t('Ex: en_US, en_UK, fr_FR, fr_CA, etc.') . '<br>' . t('On Drupal, this will be shortened to "en" or "fr", but the full locale will be used for CiviCRM or WordPress.'),
     '#required' => TRUE,
-    '#default_value' => isset($node->site_language) ? $node->site_language : 'en',
+    '#default_value' => isset($node->site_language) ? $node->site_language : 'en_US',
     '#attributes' => array('class' => array("hosting-site-form-site-language-options")),
-  ), '_hosting_language_name');
+  ], '_hosting_language_name');
 
   _hosting_site_field($form, $node, 'db_server', array(
     '#type' => 'radios',
@@ -441,12 +434,10 @@ function hosting_site_validate($node, &$form) {
     }
   }
 
-  // Check that we are selecting a valid language for this profile,
-  // but only when a new site is created.
-  if (!in_array($node->site_language, $valid_options['site_language']) && empty($node->nid)) {
-    form_set_error('site_language', t('Please fill in a valid language'));
+  // Check that we are selecting a valid language
+  if (!preg_match('/^[a-z]{2}_[A-Z]{2}$/', $node->site_language)) {
+    form_set_error('site_language', t('Please enter a language such as en_US, fr_FR, etc.'));
   }
-
 }
 
 /**
