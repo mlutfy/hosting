@@ -230,12 +230,11 @@ function hosting_site_update_7503() {
         $options['db_passwd'] = NULL;
         require $drushrc;
         if (empty($site->db_name) && !empty($options['db_name'])) {
-          $site->db_name = $options['db_name'];
+	  db_query('UPDATE hosting_site SET db_name = :name WHERE nid = :nid', [':name' => $options['db_name'], ':nid' => $site->nid]);
         }
         if (empty($site->db_passwd) && !empty($options['db_passwd'])) {
-          $site->db_passwd = $options['db_passwd'];
+	  db_query('UPDATE hosting_site SET db_passwd = :db_passwd WHERE nid = :nid', [':db_passwd' => $options['db_passwd'], ':nid' => $site->nid]);
         }
-        node_save($site);
       }
     }
   }
