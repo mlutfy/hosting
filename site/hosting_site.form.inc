@@ -435,7 +435,8 @@ function hosting_site_validate($node, &$form) {
   }
 
   // Check that we are selecting a valid language
-  if (!preg_match('/^[a-z]{2}_[A-Z]{2}$/', $node->site_language)) {
+  // Only relevant for new sitse.
+  if (empty($node->nid) && !preg_match('/^[a-z]{2}_[A-Z]{2}$/', $node->site_language)) {
     form_set_error('site_language', t('Please enter a language such as en_US, fr_FR, etc.'));
   }
 }
