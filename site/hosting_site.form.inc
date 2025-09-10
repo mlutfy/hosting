@@ -173,13 +173,8 @@ function hosting_site_available_options($node, $platform = NULL) {
   reset($profiles);
   $return['profile'] = array_keys($profiles);
 
-  if (!isset($node->profile)) {
-    $node->profile = hosting_get_default_profile($return['profile'][0]);
-  }
-
   // Filter the available platforms based on which clients the user has access to.
   if (!is_null($platform)) {
-    $node->profile = $return['profile'][0];
     $return['platform'] = array($platform);
   }
   else {
@@ -245,7 +240,6 @@ function hosting_site_form($node, &$form_state) {
     '#title' => t('Install profile'),
     '#description' => t('The type of site to install.') . '<br />' . t('The profile selected here determines the list of supported platforms below.') . '<br>' . t('Only applies to Drupal'),
     '#options' => $profiles,
-    '#default_value' => isset($node->profile) ? $node->profile : hosting_get_default_profile(key($profiles)),
     '#required' => FALSE,
     '#attributes' => array('class' => array("hosting-site-form-profile-options")),
     '#ajax' => array(
