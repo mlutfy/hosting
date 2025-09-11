@@ -422,15 +422,20 @@ function hosting_site_update(&$node) {
  * Implements hook_load().
  */
 function hosting_site_load($nodes) {
+  // Workaround for some glitchy upgrades in hosting_civicrm_ansible
+  static $software = NULL;
+  if ($software === NULL) {
+    $software = db_field_exists('hosting_platform', 'software') ? ', p.software' : '';
+  }
   foreach ($nodes as $nid => &$node) {
     $additions = db_query(
-      'SELECT  client, db_server, db_name, db_passwd, platform, profile, web_server, publish_path,
+      "SELECT  client, db_server, db_name, db_passwd, platform, profile, web_server, publish_path,
         language AS site_language, last_cron, cron_key, s.status AS site_status, s.environment, s.cron_interval,
-	p.status AS platform_status, s.verified, p.verified as platform_verified,
-        p.software
+	p.status AS platform_status, s.verified, p.verified as platform_verified
+        $software
       FROM {hosting_site} s
         LEFT JOIN {hosting_platform} p ON s.platform = p.nid
-      WHERE s.vid = :vid',
+      WHERE s.vid = :vid",
       array(':vid' => $node->vid)
     )->fetch();
     foreach ($additions as $property => &$value) {
