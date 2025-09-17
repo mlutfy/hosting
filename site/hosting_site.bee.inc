@@ -152,6 +152,12 @@ function bee_hosting_site_clone($arguments, $options) {
   $new->db_name = hosting_site_db_utils::suggest_db_name($new->title);
   $new->db_passwd = hosting_site_db_utils::generate_password();
   $new->site_status = HOSTING_SITE_QUEUED;
+  // Remove aliases
+  unset($new->aliases);
+  unset($new->redirection);
+  // Always set Environment = Development, because it's a clone,
+  // most of the time it's a new dev copy.
+  $new->environment = 0;
   // Not sure if this is necessary
   $new->status = 1;
   // Make sure it saves as a new node
