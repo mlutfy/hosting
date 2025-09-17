@@ -1,0 +1,6 @@
+name = Hosting Usage
+description = Displays stats from the Aegir usage.log
+package = Aegir
+dependencies[] = hosting
+core = 7.x
+backdrop = 1.x

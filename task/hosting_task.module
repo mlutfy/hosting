@@ -1277,14 +1277,16 @@ function _hosting_task_log_table($node, $last_position = 0) {
 
   $result = db_query("SELECT * FROM {hosting_task_log} WHERE vid = :vid AND lid > :lid AND type IN (:types) ORDER BY lid", $query_args);
   if ($result) {
-    $headers = array('data' => 'Log message', 'execution_time' => 'Execution time', '');
-    $rows = array();
+    $headers = ['data' => 'Log message'];
+    $rows = [];
     $last_lid = $last_position;
-    $last_timestamp = 0;
-    $exec_time = '';
-    $row_count = -1;
     foreach ($result as $entry) {
       $message = filter_xss($entry->message);
+
+      // Try to make the Ansible output a bit more pretty
+      $message = str_replace('\n', '<br>', $message);
+      $message = preg_replace('/<br>\s*<br>/', '<br>', $message);
+      $message = str_replace('\u001b', '', $message);
 
       // Add error and warning anchors, so we can provide a quick link to them.
       if ($entry->type == 'error') {
@@ -1294,42 +1296,17 @@ function _hosting_task_log_table($node, $last_position = 0) {
         $message = '<a name="warning"></a>' . $message;
       }
 
-      // Add the exec_time to the previous row
-      $exec_time = $entry->timestamp - $last_timestamp;
-
-      // "1" is unreliable because timestamps don't allow sub-second granularity.
-      if ($exec_time < 1) {
-        $exec_time = '<div>-</div>';
-      }
-      elseif ($exec_time == 1) {
-        $exec_time = '<div title="Many tasks take less than 1 second to perform. This duration represents an aggregate of the preceding tasks\' duration."><strong>' . $exec_time . ' s.</strong></div>';
-      }
-      else {
-        $exec_time = '<div><strong>' . $exec_time . ' s.</strong></div>';
-      }
-
-      if ($row_count > -1) {
-        $rows[$row_count]['data'][1] = array(
-          'data' => $exec_time,
-        );
-      }
-
-      $row_count++;
-      $last_timestamp = $entry->timestamp;
-
-      $row = array(
-        array(
+      $row = [
+        [
           'data' => $message,
-          'class' => array('hosting-status'),
-        ),
-        '',
-        $entry->type,
-      );
+          'class' => ['hosting-status'],
+        ],
+      ];
 
-      $rows[] = array(
+      $rows[] = [
         'data' => $row,
-        'class' => array(_hosting_task_log_class($entry->type)),
-      );
+        'class' => [_hosting_task_log_class($entry->type)],
+      ];
 
       // Record that we've seen this log row.
       $last_lid = $entry->lid;
