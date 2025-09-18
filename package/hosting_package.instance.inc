@@ -20,6 +20,7 @@
  * @param $type
  *   The type of the entity on which we are operating (platform, site or
  *   profile.
+ * @deprecated
  */
 function hosting_package_instance_sync($rid, $type) {
   db_update('hosting_package_instance')
@@ -157,6 +158,7 @@ function hosting_package_instance_create(&$instance) {
  * Get the first package instance object that maches given parameters.
  *
  * @see hosting_package_instances_load()
+ * @deprecated
  */
 function hosting_package_instance_load($param) {
   return _hosting_package_instances_load($param);
@@ -332,7 +334,6 @@ function hosting_package_instance_version_code($version) {
  * @see http://drupal.org/node/1354
  */
 function hosting_package_comparison($current, $target) {
-
   $current_table = _hosting_package_temporary_table($current);
   $target_table = _hosting_package_temporary_table($target);
 
@@ -394,7 +395,6 @@ function hosting_package_comparison($current, $target) {
   return $status;
 }
 
-
 function _hosting_package_temporary_table($ref) {
   static $names = array();
 
@@ -406,7 +406,6 @@ function _hosting_package_temporary_table($ref) {
               ON p.nid = i.package_id
               WHERE i.rid = :rid and i.platform != :platform",
               array( ':rid' => $ref, ':platform' => HOSTING_PACKAGE_INSTANCE_EXCLUDE));
-
   }
 
   return $names[$ref];
@@ -414,6 +413,7 @@ function _hosting_package_temporary_table($ref) {
 
 /**
  * Helper to determine if a particular site has a module installed.
+ * @deprecated
  */
 function _hosting_package_site_has_module($node, $module) {
   $package = hosting_package_instance_load(array('rid' => $node->nid, 'p.short_name' => $module));

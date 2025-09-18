@@ -152,23 +152,14 @@ function hosting_task_migrate_form($node) {
 
 
   drupal_add_js(drupal_get_path('module', 'hosting_migrate') . '/hosting_migrate.js');
-  $packages = [];
 
-  $site_profile = node_load($node->profile);
-
-  $profile_platform_instances = hosting_package_instances_load(
-    array('r.type' => 'platform', 'n.nid' => $node->profile, 'h.status' => HOSTING_PLATFORM_ENABLED));
-
-  // In the list of possible targets, we also include install profiles on platforms that
-  // USED to be named the same as our current install profile. Such as the d6 -> d7 rename
-  // of the default profile to standard.
-  $profile_platform_instances = array_merge($profile_platform_instances, hosting_package_instances_load(
-    array('r.type' => 'platform', 'p.old_short_name' => $site_profile->short_name)));
+  global $user;
+  $profile_platform_instances = _hosting_get_allowed_platforms($user->uid);
 
   $site_platform = node_load($node->platform);
   $has_platform_available = FALSE;
 
-  // Don't show the current platform if it's locked
+  // Show the current platform first (if it's not locked)
   if (!_hosting_platform_is_locked($node->platform)) {
     $form[$node->platform]['target_platform'] = [
       '#type' => 'radio',
@@ -180,18 +171,21 @@ function hosting_task_migrate_form($node) {
     ];
     $has_platform_available = TRUE;
   }
-  foreach ($profile_platform_instances as $profile_instance) {
-    if (($profile_instance->rid != $node->platform) && (in_array($profile_instance->rid, $valid_options['platform']))) {
-      $platform = node_load($profile_instance->rid);
-      $form[$platform->nid]['target_platform'] = [
+  foreach ($profile_platform_instances as $platform_id => $profile_instance) {
+    if ($platform_id != $node->platform) {
+      $platform = node_load($platform_id);
+      // Do not allow migrating into the Aegir platform
+      if ($platform->publish_path == '/var/aegir/admin/web') {
+        continue;
+      }
+      $form[$platform_id]['target_platform'] = [
         '#type' => 'radio',
         '#title' => check_plain($platform->title),
         '#parents' => array('parameters', 'target_platform'),
-        "#return_value" => $platform->nid,
-        '#description' => $description,
+        "#return_value" => $platform_id,
       ];
       if ($status['error']) {
-        $form[$platform->nid]['target_platform']['#disabled'] = TRUE;
+        $form[$platform_id]['target_platform']['#disabled'] = TRUE;
       }
       $has_platform_available = TRUE;
     }
