@@ -63,7 +63,7 @@ function bee_hosting_platform_update_status($arguments, $options) {
 function bee_hosting_platform_detect_packages($arguments, $options) {
   global $user;
 
-  $platform = db_query('SELECT publish_path FROM hosting_platform WHERE nid = :nid', [':nid' => $arguments['nid']])->fetchObject();
+  $platform = db_query('SELECT publish_path, software FROM hosting_platform WHERE nid = :nid', [':nid' => $arguments['nid']])->fetchObject();
 
   if (empty($platform)) {
     echo "Platform not found\n";
@@ -72,7 +72,12 @@ function bee_hosting_platform_detect_packages($arguments, $options) {
 
   $profiles = [];
   // @todo Find in '/profiles' too (non-core profiles)
-  $command = "find " . escapeshellarg($platform->publish_path . '/core/profiles/') . " -name '*.info.yml' ! -exec grep -Li 'hidden: TRUE' {} \; -exec grep -l 'type: profile' {} \; | grep -v testing | sed 's|.*/profiles/\([-_a-zA-Z]\+\).*|\\1|' | sort | uniq";
+  $scan_profile_dir = $platform->publish_path . '/core/profiles/';
+  $command = "find " . escapeshellarg($scan_profile_dir) . " -name '*.info.yml' ! -exec grep -Li 'hidden: TRUE' {} \; -exec grep -l 'type: profile' {} \; | grep -v testing | sed 's|.*/profiles/\([-_a-zA-Z]\+\).*|\\1|' | sort | uniq";
+  if ($platform->software == 'Drupal7') {
+    $scan_profile_dir = $platform->publish_path . '/profiles/';
+    $command = "find " . escapeshellarg($scan_profile_dir) . " -name '*.info' ! -exec grep -Li 'hidden = TRUE' {} \; | grep -v testing | grep -v themes | grep -v modules | sed 's|.*/profiles/\([-_a-zA-Z]\+\).*|\\1|' | sort | uniq";
+  }
   exec($command, $profiles);
 
   foreach ($profiles as $profile) {
