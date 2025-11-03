@@ -184,7 +184,7 @@ function bee_hosting_site_migrate($arguments, $options) {
   // @todo FIXME This was copied from the clone function
   // and would not be relevant if we are only migrating the database
   $test = hosting_get_site_by_url($arguments['newuri']);
-  if (!empty($test)) {
+  if (!empty($test) && $test->platform == $arguments['newplatform']) {
     echo $test->nid . "\n";
     return;
   }
