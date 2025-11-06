@@ -63,7 +63,7 @@ function bee_hosting_platform_update_status($arguments, $options) {
 function bee_hosting_platform_detect_packages($arguments, $options) {
   global $user;
 
-  $platform = db_query('SELECT publish_path FROM hosting_platform WHERE nid = :nid', [':nid' => $arguments['nid']])->fetchObject();
+  $platform = db_query('SELECT publish_path, software FROM hosting_platform WHERE nid = :nid', [':nid' => $arguments['nid']])->fetchObject();
 
   if (empty($platform)) {
     echo "Platform not found\n";
@@ -72,7 +72,12 @@ function bee_hosting_platform_detect_packages($arguments, $options) {
 
   $profiles = [];
   // @todo Find in '/profiles' too (non-core profiles)
-  $command = "find " . escapeshellarg($platform->publish_path . '/core/profiles/') . " -name '*.info.yml' ! -exec grep -Li 'hidden: TRUE' {} \; -exec grep -l 'type: profile' {} \; | grep -v testing | sed 's|.*/profiles/\([-_a-zA-Z]\+\).*|\\1|' | sort | uniq";
+  $scan_profile_dir = $platform->publish_path . '/core/profiles/';
+  $command = "find " . escapeshellarg($scan_profile_dir) . " -name '*.info.yml' ! -exec grep -Li 'hidden: TRUE' {} \; -exec grep -l 'type: profile' {} \; | grep -v testing | sed 's|.*/profiles/\([-_a-zA-Z]\+\).*|\\1|' | sort | uniq";
+  if ($platform->software == 'Drupal7') {
+    $scan_profile_dir = $platform->publish_path . '/profiles/';
+    $command = "find " . escapeshellarg($scan_profile_dir) . " -name '*.info' ! -exec grep -Li 'hidden = TRUE' {} \; | grep -v testing | grep -v themes | grep -v modules | sed 's|.*/profiles/\([-_a-zA-Z]\+\).*|\\1|' | sort | uniq";
+  }
   exec($command, $profiles);
 
   foreach ($profiles as $profile) {
@@ -118,18 +123,24 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
     exit(1);
   }
 
+  // Check if a webserver already exists (ex: D7->Backdrop upgrades)
+  $server_nid = db_query("select nid from node where type = 'server' and title in ('127.0.0.1', 'localhost')")->fetchField();
+
   // Create the webserver
-  $server = new Node();
-  $server->title = 'localhost';
-  $server->type = 'server';
-  $server->status = 1;
-  $server->uid = 1;
-  $server->services = [];
-  // @todo - services are complicated...
-  // $server->services['db'] = new hostingService_db_mysql();
-  // $server->services['http']->available = TRUE;
-  $server = node_submit($server);
-  node_save($server);
+  if (!$server_nid) {
+    $server = new Node();
+    $server->title = 'localhost';
+    $server->type = 'server';
+    $server->status = 1;
+    $server->uid = 1;
+    $server->services = [];
+    // @todo - services are complicated...
+    // $server->services['db'] = new hostingService_db_mysql();
+    // $server->services['http']->available = TRUE;
+    $server = node_submit($server);
+    node_save($server);
+    $server_nid = $server->nid;
+  }
 
   // Create the platform
   $platform = new Node();
@@ -137,7 +148,7 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
   $platform->type = 'platform';
   $platform->publish_path = '/var/aegir/admin/web';
   $platform->software = 'Backdrop';
-  $platform->web_server = $server->nid;
+  $platform->web_server = $server_nid;
   $platform->status = 1;
   $platform->uid = 1;
   $platform = node_submit($platform);
@@ -145,19 +156,30 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
 
   // Find the database password
   $settings = file_get_contents('/var/aegir/admin/web/settings.php');
-  preg_match("#'password' => '([^']+)',#", $settings, $matches);
+  $db_name = 'aegir';
+  $db_passwd = '';
+  if (preg_match("#'database' => '([^']+)',#", $settings, $matches)) {
+    $db_name = $matches[1];
+  }
+  if (preg_match("#'password' => '([^']+)',#", $settings, $matches)) {
+    $db_passwd = $matches[1];
+  }
 
   // Create the Aegir site
+  // @todo If upgrading from Drupal7, move the existing node over? delete the old hostmaster platform?
   $site = new Node();
   $site->title = config_get('system.core', 'site_name');
   $site->type = 'site';
   $site->platform = $platform->nid;
   // Production environment
   $site->environment = 1;
+  // CMS cron (1 day)
+  $site->cron_interval = 86400;
+  $site->civicrm_ansible_cron_interval = -1;
   // @todo Assumes mysql runs on localhost
-  $site->db_server = $server->nid;
-  $site->db_name = 'aegir';
-  $site->db_passwd = $matches[1];
+  $site->db_server = $server_nid;
+  $site->db_name = $db_name;
+  $site->db_passwd = $db_passwd;
   $site->status = 1;
   $site->uid = 1;
   $site = node_submit($site);

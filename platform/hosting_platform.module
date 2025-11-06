@@ -383,10 +383,6 @@ function hosting_platform_form(&$node) {
   ];
 
   // Allow editing if the node is in creation, or if wasn't verified correctly
-  // *and* we're not using a makefile. The reason why we don't allow editing
-  // the path if the makefile was specified is that there's the possibility
-  // that the platform path was actually created when the node was saved the
-  // first time and we have cruft lying around to cleanup.
   if (!isset($node->nid) || (empty($node->verified))) {
     $base_path = variable_get('hosting_platform_base_path', '/var/aegir/platforms/');
     $default_path = '';
@@ -461,6 +457,34 @@ function hosting_platform_form(&$node) {
     );
   }
 
+  $form['site_post_install_cmd'] = [
+    '#type' => 'textfield',
+    '#title' => t('Site post-install command'),
+    '#required' => FALSE,
+    '#description' => t('Run a shell command after the install tasks (should start with: drush, bee, cv).'),
+    '#size' => 40,
+    '#default_value' => $node->site_post_install_cmd,
+    '#maxlength' => 255,
+  ];
+  $form['site_post_import_cmd'] = [
+    '#type' => 'textfield',
+    '#title' => t('Site post-import command'),
+    '#required' => FALSE,
+    '#description' => t('Run a shell command after the import/clone tasks (should start with: drush, bee, cv).'),
+    '#size' => 40,
+    '#default_value' => $node->site_post_import_cmd,
+    '#maxlength' => 255,
+  ];
+  $form['site_post_verify_cmd'] = [
+    '#type' => 'textfield',
+    '#title' => t('Site post-verify command'),
+    '#required' => FALSE,
+    '#description' => t('Run a shell command after the verify tasks (should start with: drush, bee, cv).'),
+    '#size' => 40,
+    '#default_value' => $node->site_post_verify_cmd,
+    '#maxlength' => 255,
+  ];
+
   return $form;
 }
 
@@ -500,9 +524,6 @@ function hosting_platform_form_alter(&$form, &$form_state, $form_id) {
  * Implements hook_insert().
  */
 function hosting_platform_insert($node) {
-  if (!isset($node->no_verify)) {
-    hosting_add_task($node->nid, 'verify');
-  }
   $id = db_insert('hosting_platform')
     ->fields([
       'vid' => $node->vid,
@@ -512,10 +533,19 @@ function hosting_platform_insert($node) {
       'verified' => isset($node->verified) ? $node->verified : 0,
       'web_server' => $node->web_server,
       'status' => isset($node->platform_status) ? $node->platform_status : 0,
+      'site_post_install_cmd' => $node->site_post_install_cmd ?? NULL,
+      'site_post_import_cmd' => $node->site_post_import_cmd ?? NULL,
+      'site_post_verify_cmd' => $node->site_post_verify_cmd ?? NULL,
     ])
     ->execute();
   if (!isset($node->old_vid)) {
     hosting_context_register($node->nid, 'platform_' . preg_replace("/[!\W]/", "", $node->title));
+  }
+  if (defined('BACKDROP_ROOT')) {
+    backdrop_flush_all_caches();
+  }
+  if (!isset($node->no_verify)) {
+    hosting_add_task($node->nid, 'verify');
   }
 }
 
@@ -541,12 +571,12 @@ function hosting_platform_update($node) {
         'web_server' => $node->web_server,
         'verified' => $node->verified ?? 0,
         'status' => $node->platform_status ?? HOSTING_PLATFORM_QUEUED,
+        'site_post_install_cmd' => $node->site_post_install_cmd ?? NULL,
+        'site_post_import_cmd' => $node->site_post_import_cmd ?? NULL,
+        'site_post_verify_cmd' => $node->site_post_verify_cmd ?? NULL,
       ])
       ->condition('nid', $node->nid)
       ->execute();
-  }
-  if (!isset($node->no_verify)) {
-    hosting_add_task($node->nid, 'verify');
   }
 }
 
@@ -674,7 +704,9 @@ function hosting_platform_path_exists($path, $exclude_nid = NULL) {
  */
 function hosting_platform_load($nodes) {
   foreach ($nodes as $nid => &$node) {
-    $additions = db_query('SELECT publish_path, verified, web_server, status AS platform_status, software FROM {hosting_platform} WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
+    $additions = db_query('SELECT publish_path, verified, web_server, status AS platform_status, software, site_post_install_cmd, site_post_import_cmd, site_post_verify_cmd
+      FROM {hosting_platform}
+      WHERE vid = :vid', array(':vid' => $node->vid))->fetch();
     $additions = $additions ? $additions : new stdClass();
     $iid = db_query("SELECT iid
                      FROM {hosting_package_instance} i

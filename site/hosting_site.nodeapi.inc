@@ -61,6 +61,13 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
     '#weight' => -16,
   );
 
+  $node->content['info']['site_path'] = [
+    '#type' => 'item',
+    '#title' => t('Site path'),
+    '#markup' => $node->publish_path . '/sites/' . $node->title,
+    '#weight' => -16,
+  ];
+
   if ($node->profile) {
     $node->content['info']['profile'] = array(
       '#type' => 'item',
@@ -87,20 +94,24 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
     );
   }
 
-  if ($node->db_name) {
-    $node->content['info']['db_name'] = array(
-      '#type' => 'item',
-      '#title' => t('Database name'),
-      '#markup' => check_plain($node->db_name),
-      '#weight' => -4,
-    );
-  }
+  $node->content['info']['db_name'] = [
+    '#type' => 'item',
+    '#title' => t('Database name'),
+    '#markup' => !empty($node->db_name) ? check_plain($node->db_name) : 'MISSING',
+    '#weight' => -4,
+  ];
+  $node->content['info']['db_passwd'] = [
+    '#type' => 'item',
+    '#title' => t('Database password'),
+    '#markup' => !empty($node->db_passwd) ? 'ok' : 'MISSING',
+    '#weight' => -3,
+  ];
 
   $node->content['info']['cron_interval'] = array(
     '#type' => 'item',
     '#title' => t('CMS cron interval'),
     '#markup' => $node->cron_interval ? format_interval($node->cron_interval) : t('Disabled'),
-    '#weight' => -3,
+    '#weight' => -2,
   );
 
   $node->content['info']['#suffix'] = '</div>';
@@ -350,7 +361,7 @@ function hosting_site_insert(&$node) {
  */
 function hosting_site_node_insert($node) {
   if ($node->type == "site") {
-    if ((empty($node->old_vid))) {
+    if (empty($node->old_vid)) {
       hosting_context_register($node->nid, isset($node->hosting_name) ? $node->hosting_name : $node->title);
       if (isset($node->import)) {
         hosting_add_task($node->nid, 'import');
@@ -374,14 +385,19 @@ function hosting_site_update(&$node) {
     $node->client = 0; // deprecated
     if ($node->site_status == HOSTING_SITE_DELETED) {
       $node->no_verify = TRUE;
+      // If the site status is deleted, delete the context
+      // otherwise we will not be able to create a new site with the same title
+      db_delete('hosting_context')
+        ->condition('nid', $node->nid)
+        ->execute();
     }
 
     db_update('hosting_site')
-      ->fields(array(
-        'client' => $node->client,
+      ->fields([
         'db_server' => $node->db_server,
         'db_name' => $node->db_name,
-        'db_passwd' => $node->db_passwd,
+	// This is not exposed in the UI at the moment, and risks accidentally wiping the password
+        // 'db_passwd' => $node->db_passwd,
         'platform' => $node->platform,
         'last_cron' => $node->last_cron,
         'cron_key' => $node->cron_key,
@@ -391,7 +407,7 @@ function hosting_site_update(&$node) {
         'verified' => $node->verified,
         'environment' => $node->environment,
         'cron_interval' => $node->cron_interval,
-      ))
+      ])
       ->condition('vid', $node->vid)
       ->execute();
     
@@ -406,15 +422,20 @@ function hosting_site_update(&$node) {
  * Implements hook_load().
  */
 function hosting_site_load($nodes) {
+  // Workaround for some glitchy upgrades in hosting_civicrm_ansible
+  static $software = NULL;
+  if ($software === NULL) {
+    $software = db_field_exists('hosting_platform', 'software') ? ', p.software' : '';
+  }
   foreach ($nodes as $nid => &$node) {
     $additions = db_query(
-      'SELECT  client, db_server, db_name, db_passwd, platform, profile, web_server, publish_path,
+      "SELECT  client, db_server, db_name, db_passwd, platform, profile, web_server, publish_path,
         language AS site_language, last_cron, cron_key, s.status AS site_status, s.environment, s.cron_interval,
-	p.status AS platform_status, s.verified, p.verified as platform_verified,
-        p.software
+	p.status AS platform_status, s.verified, p.verified as platform_verified
+        $software
       FROM {hosting_site} s
         LEFT JOIN {hosting_platform} p ON s.platform = p.nid
-      WHERE s.vid = :vid',
+      WHERE s.vid = :vid",
       array(':vid' => $node->vid)
     )->fetch();
     foreach ($additions as $property => &$value) {

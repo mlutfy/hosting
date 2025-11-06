@@ -39,6 +39,17 @@ function hosting_site_bee_command() {
       'newdbserver' => bt('Destination database server Node ID'),
     ],
   ];
+  $items['hosting-site-migrate'] = [
+    'description' => 'Migrate a site node',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_site_migrate',
+    'arguments' => [
+      'nid' => bt('Node ID of the site to migrate'),
+      'newuri' => bt('URI of the new site'),
+      'newplatform' => bt('Destination platform Node ID'),
+      'newdbserver' => bt('Destination database server Node ID'),
+    ],
+  ];
   $items['hosting-site-login'] = [
     'description' => 'Save a login link',
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
@@ -131,6 +142,8 @@ function bee_hosting_site_clone($arguments, $options) {
   $new = clone $node;
   $new->is_new = TRUE;
   $new->no_verify = TRUE;
+  // Don't install, import the SQL dump
+  $new->import = TRUE;
   // Destination URI and platform/db
   $new->title = $arguments['newuri'];
   $new->platform = $arguments['newplatform'];
@@ -139,6 +152,12 @@ function bee_hosting_site_clone($arguments, $options) {
   $new->db_name = hosting_site_db_utils::suggest_db_name($new->title);
   $new->db_passwd = hosting_site_db_utils::generate_password();
   $new->site_status = HOSTING_SITE_QUEUED;
+  // Remove aliases
+  unset($new->aliases);
+  unset($new->redirection);
+  // Always set Environment = Development, because it's a clone,
+  // most of the time it's a new dev copy.
+  $new->environment = 0;
   // Not sure if this is necessary
   $new->status = 1;
   // Make sure it saves as a new node
@@ -149,5 +168,43 @@ function bee_hosting_site_clone($arguments, $options) {
   unset($new->path);
   unset($new->hosting_name);
   node_save($new);
+  // Refresh the inventory
+  backdrop_flush_all_caches();
   echo $new->nid . "\n";
+}
+
+/**
+ * Migrate a site node
+ */
+function bee_hosting_site_migrate($arguments, $options) {
+  // Assuming we validated in the form layer that we cannot clone to an
+  // existing site and that we want to make Ansible somewhat idempotent,
+  // we avoid a fatal if the clone node already exists, even if a bit
+  // unusual
+  // @todo FIXME This was copied from the clone function
+  // and would not be relevant if we are only migrating the database
+  $test = hosting_get_site_by_url($arguments['newuri']);
+  if (!empty($test) && $test->platform == $arguments['newplatform']) {
+    echo $test->nid . "\n";
+    return;
+  }
+  // Update the existing node
+  $node = node_load($arguments['nid']);
+  // Destination URI and platform/db
+  $node->title = $arguments['newuri'];
+  $node->platform = $arguments['newplatform'];
+  $node->db_server = $arguments['newdbserver'];
+  // @todo FIXME for database migration
+  // Generate new DB credentials
+  // $node->db_name = hosting_site_db_utils::suggest_db_name($node->title);
+  // $node->db_passwd = hosting_site_db_utils::generate_password();
+  // $node->site_status = HOSTING_SITE_QUEUED;
+  // Not sure if this is necessary
+  $node = node_submit($node);
+  unset($node->path);
+  unset($node->hosting_name);
+  node_save($node);
+  // Refresh the inventory
+  backdrop_flush_all_caches();
+  echo $node->nid . "\n";
 }

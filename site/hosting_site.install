@@ -77,8 +77,8 @@ function hosting_site_schema() {
       ),
       'profile' => array(
         'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
+        'not null' => FALSE,
+        'default' => NULL,
       ),
       'language' => array(
         'type' => 'varchar',
@@ -209,4 +209,64 @@ function hosting_site_update_7502() {
       'default' => 0,
     ]);
   }
+}
+
+/**
+ * Fill in empty db_passwd using drushrc.php.
+ */
+function hosting_site_update_7503() {
+  // Drupal sites
+  if (function_exists('hosting_civicrm_ansible_get_all_sites')) {
+    $nids = hosting_civicrm_ansible_get_all_sites(TRUE);
+    $sites = node_load_multiple($nids);
+    foreach ($sites as $site) {
+      if (!empty($site->db_passwd) && !empty($site->db_name)) {
+        continue;
+      }
+      $drushrc = $site->publish_path . '/sites/' . $site->title . '/drushrc.php';
+      if (file_exists($drushrc)) {
+        global $options;
+        $options['db_name'] = NULL;
+        $options['db_passwd'] = NULL;
+        require $drushrc;
+        if (empty($site->db_name) && !empty($options['db_name'])) {
+	  db_query('UPDATE hosting_site SET db_name = :name WHERE nid = :nid', [':name' => $options['db_name'], ':nid' => $site->nid]);
+        }
+        if (empty($site->db_passwd) && !empty($options['db_passwd'])) {
+	  db_query('UPDATE hosting_site SET db_passwd = :db_passwd WHERE nid = :nid', [':db_passwd' => $options['db_passwd'], ':nid' => $site->nid]);
+        }
+      }
+    }
+  }
+  // WordPress sites
+  if (function_exists('hosting_get_wpsites_by_status')) {
+    $sites = hosting_get_wpsites_by_status(null, HOSTING_WPSITE_ENABLED);
+    foreach ($sites as $site) {
+      if (!empty($site->db_passwd) && !empty($site->db_name)) {
+        continue;
+      }
+      $platform = node_load($site->wpplatform);
+      $drushrc = $platform->publish_path . '/sites/' . $site->title . '/drushrc.php';
+      if (file_exists($drushrc)) {
+        global $options;
+        $options['db_name'] = NULL;
+        $options['db_passwd'] = NULL;
+        require $drushrc;
+        if (empty($site->db_name) && !empty($options['db_name'])) {
+          $site->db_name = $options['db_name'];
+        }
+        if (empty($site->db_passwd) && !empty($options['db_passwd'])) {
+          $site->db_passwd = $options['db_passwd'];
+        }
+        node_save($site);
+      }
+    }
+  }
+}
+
+/**
+ * Allow the profile column to be NULL (makes more sense than 0)
+ */
+function hosting_site_update_7504() {
+  db_query('ALTER TABLE hosting_site CHANGE profile profile int(11) DEFAULT NULL');
 }
