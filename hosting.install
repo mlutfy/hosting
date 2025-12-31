@@ -52,3 +52,10 @@ function hosting_schema() {
   );
   return $schema;
 }
+
+/**
+ * Assume that the r4032login module was removed.
+ */
+function hosting_update_1000() {
+  config_set('system.core', 'site_403', '');
+}
