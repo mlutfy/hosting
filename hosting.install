@@ -59,3 +59,20 @@ function hosting_schema() {
 function hosting_update_1000() {
   config_set('system.core', 'site_403', '');
 }
+
+/**
+ * Set the Moscone Flipped layout by default.
+ */
+function hosting_update_1001() {
+  $layout_config = config('layout.layout.default');
+  $layout_config->set('layout_template', 'moscone_flipped');
+  $layout_config->save();
+}
+
+/**
+ * Set the Basis theme by default.
+ */
+function hosting_update_1002() {
+  theme_enable(['basis']);
+  config_set('system.core', 'theme_default', 'basis');
+}
