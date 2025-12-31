@@ -156,3 +156,10 @@ function hosting_task_schema() {
 
   return $schema;
 }
+
+/**
+ * Import the Views configuration during D7 to Backdrop upgrade.
+ */
+function hosting_task_update_1000() {
+  config_install_default_config('hosting_task', 'views.view.hosting_task_list');
+}
