@@ -1,0 +1,7 @@
+name = "Hosting remote import"
+description = "Helps to import sites from remote Hostmasters"
+core = 7.x
+backdrop = 1.x
+package = Hosting
+
+files[] = hosting_remote_import.service.inc
