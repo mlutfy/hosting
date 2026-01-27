@@ -22,14 +22,14 @@ function hosting_remote_import_schema() {
       'site' => array(
         'type' => 'varchar',
         'length' => 255,
-        'not null' => TRUE,
+        'not null' => FALSE,
         'default' => '',
       ),
       'platform' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => 0,
+        'default' => NULL,
       ),
     ),
     'indexes' => array(
@@ -41,13 +41,8 @@ function hosting_remote_import_schema() {
 }
 
 /**
- * Add 'platform' field to remote_import_sites.
+ * Allow the platform column to be NULL (makes more sense than 0)
  */
-function hosting_remote_import_update_7000() {
-  db_add_field('remote_import_sites', 'platform', array(
-    'type' => 'varchar',
-    'length' => 255,
-    'not null' => TRUE,
-    'default' => 0,
-  ));
+function hosting_remote_import_update_1000() {
+  db_query('ALTER TABLE remote_import_sites CHANGE platform platform varchar DEFAULT NULL');
 }
