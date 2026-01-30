@@ -1,0 +1,48 @@
+<?php
+/**
+ * @file
+ * Install, update and uninstall functions for the hosting_remote_import module.
+ *
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function hosting_remote_import_schema() {
+  $schema = array();
+
+  $schema['remote_import_sites'] = array(
+    'fields' => array(
+      'tid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ),
+      'site' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => FALSE,
+        'default' => '',
+      ),
+      'platform' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'default' => NULL,
+      ),
+    ),
+    'indexes' => array(
+      'tid' => array('tid'),
+    ),
+  );
+
+  return $schema;
+}
+
+/**
+ * Allow the platform column to be NULL (makes more sense than 0)
+ */
+function hosting_remote_import_update_1000() {
+  db_query('ALTER TABLE remote_import_sites CHANGE platform platform varchar DEFAULT NULL');
+}

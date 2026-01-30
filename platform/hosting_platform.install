@@ -138,3 +138,10 @@ function hosting_platform_update_7501() {
     ]);
   }
 }
+
+/**
+ * Import the Views configuration during D7 to Backdrop upgrade.
+ */
+function hosting_platform_update_1000() {
+  config_install_default_config('hosting_platform', 'views.view.hosting_platform_list');
+}
