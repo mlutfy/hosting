@@ -44,5 +44,5 @@ function hosting_remote_import_schema() {
  * Allow the platform column to be NULL (makes more sense than 0)
  */
 function hosting_remote_import_update_1000() {
-  db_query('ALTER TABLE remote_import_sites CHANGE platform platform varchar DEFAULT NULL');
+  db_query('ALTER TABLE remote_import_sites CHANGE platform platform varchar(255) DEFAULT NULL');
 }
