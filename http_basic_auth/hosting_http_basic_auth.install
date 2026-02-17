@@ -1,0 +1,51 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the hosting_http_basic_auth module.
+ *
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function hosting_http_basic_auth_schema() {
+  $schema['hosting_http_basic_auth'] = [
+    'fields' => [
+      'vid' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'nid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'username' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ],
+      'password' => [
+        'type' => 'varchar',
+        'length' => 128,
+        'not null' => TRUE,
+      ],
+      'whitelist' => [
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+      ],
+      'message' => [
+        'type' => 'text',
+        'not null' => TRUE,
+      ],
+    ],
+    'indexes' => [
+      'vid' => ['vid'],
+    ],
+  ];
+  return $schema;
+}
