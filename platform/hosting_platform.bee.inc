@@ -156,7 +156,14 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
 
   // Find the database password
   $settings = file_get_contents('/var/aegir/admin/web/settings.php');
-  preg_match("#'password' => '([^']+)',#", $settings, $matches);
+  $db_name = 'aegir';
+  $db_passwd = '';
+  if (preg_match("#'database' => '([^']+)',#", $settings, $matches)) {
+    $db_name = $matches[1];
+  }
+  if (preg_match("#'password' => '([^']+)',#", $settings, $matches)) {
+    $db_passwd = $matches[1];
+  }
 
   // Create the Aegir site
   // @todo If upgrading from Drupal7, move the existing node over? delete the old hostmaster platform?
@@ -166,10 +173,13 @@ function bee_hosting_platform_setup_aegir($arguments, $options) {
   $site->platform = $platform->nid;
   // Production environment
   $site->environment = 1;
+  // CMS cron (1 day)
+  $site->cron_interval = 86400;
+  $site->civicrm_ansible_cron_interval = -1;
   // @todo Assumes mysql runs on localhost
   $site->db_server = $server_nid;
-  $site->db_name = 'aegir';
-  $site->db_passwd = $matches[1];
+  $site->db_name = $db_name;
+  $site->db_passwd = $db_passwd;
   $site->status = 1;
   $site->uid = 1;
   $site = node_submit($site);

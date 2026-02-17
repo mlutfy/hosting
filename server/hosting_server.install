@@ -117,3 +117,10 @@ function hosting_server_schema() {
 
   return $schema;
 }
+
+/**
+ * Import the Views configuration during D7 to Backdrop upgrade.
+ */
+function hosting_server_update_1000() {
+  config_install_default_config('hosting_server', 'views.view.hosting_server_list');
+}
