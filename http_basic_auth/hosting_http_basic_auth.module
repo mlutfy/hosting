@@ -206,3 +206,20 @@ function hosting_http_basic_auth_set_target_http_basic_auth_simple($node, $targe
 function hosting_http_basic_auth_set_target_http_basic_auth_message($node, $target, $value) {
   $node->$target = !empty($value) ? $value : t('Restricted access');
 }
+
+/**
+ * Implements hook_node_view().
+ */
+function hosting_http_basic_auth_node_view($node, $view_mode, $langcode = NULL) {
+  if ($node->type != "site") {
+    return;
+  }
+  if (!empty($node->http_basic_auth_username)) {
+    $node->content['info']['http_basic_auth'] = [
+      '#type' => 'item',
+      '#title' => t('Restricted access credentials'),
+      '#markup' => $node->http_basic_auth_username . ' / ' . $node->http_basic_auth_password,
+      '#weight' => 0,
+    ];
+  }
+}
