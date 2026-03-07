@@ -108,6 +108,25 @@ function hosting_site_views_data() {
     ),
   );
 
+  $data['hosting_site']['environment'] = [
+    'title' => t('Environment'),
+    'help' => t('Environment (development or production)'),
+    'field' => [
+      'handler' => 'hosting_site_handler_field_environment',
+      'click sortable' => TRUE,
+    ],
+/*
+    'filter' => [
+      'handler' => 'views_handler_filter_in_operator',
+      'options callback' => 'hosting_site_environments_codes',
+      'options arguments' => array('label'),
+    ],
+*/
+    'sort' => [
+      'handler' => 'views_handler_sort',
+    ],
+  ];
+
   // Views data for 'hosting_site_backups' table.
   $data['hosting_site_backups']['table'] = array(
     'title' => 'Backups',

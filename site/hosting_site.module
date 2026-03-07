@@ -52,6 +52,7 @@ function hosting_site_autoload_info() {
     'hosting_site_handler_field_canonical' => 'includes/views/handlers/hosting_site_handler_field_canonical.inc',
     'hosting_site_handler_field_language' => 'includes/views/handlers/hosting_site_handler_field_language.inc',
     'hosting_site_handler_field_status' => 'includes/views/handlers/hosting_site_handler_field_status.inc',
+    'hosting_site_handler_field_environment' => 'includes/views/handlers/hosting_site_handler_field_environment.inc',
     'hosting_site_field_handler_canonical' => 'includes/views/handlers/hosting_site_handler_field_canonical.inc',
     'hosting_site_plugin_access' => 'includes/views/plugins/hosting_site_plugin_access.inc',
     'hosting_site_db_utils' => 'includes/db_utils.php',
@@ -636,6 +637,20 @@ function _hosting_site_status($node) {
   $status = (is_numeric($node)) ? $node : $node->site_status;
   $labels = hosting_site_status_codes('label');
   return $labels[$status];
+}
+
+/**
+ * Define the status types of a site
+ */
+function _hosting_site_environment($node) {
+  $environment = (is_numeric($node)) ? $node : $node->environment;
+  if ($environment == 0) {
+    return t('Development');
+  }
+  if ($environment == 1) {
+    return t('Production');
+  }
+  return t('Unknown');
 }
 
 /**
