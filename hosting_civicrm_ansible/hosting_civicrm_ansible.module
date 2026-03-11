@@ -748,6 +748,9 @@ function hosting_civicrm_ansible_execute($task) {
   ];
 
   $process = proc_open($command, $descriptors, $pipes);
+  // This will be updating while reading the output
+  // it is otherwise not reliable to get the status from proc_close (returns -1)
+  $exitCode = 0;
 
   // Set non-blocking mode
   stream_set_blocking($pipes[1], FALSE);
@@ -793,6 +796,8 @@ function hosting_civicrm_ansible_execute($task) {
       }
 
       $status = proc_get_status($process);
+      $exitCode = $status['exitcode'];
+
       if (!$status['running']) {
         break;
       }
@@ -806,7 +811,7 @@ function hosting_civicrm_ansible_execute($task) {
     fclose($pipes[2]);
 
     // Close the process
-    $exitCode = proc_close($process);
+    proc_close($process);
 
     // @todo Warnings should be 'error' but we are having too many problems with Aegir rolling-back for no reason
     // The new aegir does not rollback, so maybe we can change this?
@@ -816,7 +821,7 @@ function hosting_civicrm_ansible_execute($task) {
     // but just in case, log a warning at the end (not at the beginning, or it breaks
     // the "jump to first warnin").
     if ($exitCode) {
-      hosting_task_log($task->vid, 'warning', 'CiviCRM Ansible exited with an error');
+      hosting_task_log($task->vid, 'warning', 'CiviCRM Ansible exited with an error: ' . $exitCode);
     }
   }
 
