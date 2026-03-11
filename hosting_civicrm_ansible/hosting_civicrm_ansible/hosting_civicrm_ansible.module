@@ -1,0 +1,860 @@
+<?php
+
+// Do not run CiviCRM cron for this site.
+define('HOSTING_CIVICRM_ANSIBLE_CRON_SITE_DISABLED', -1);
+
+include_once 'hosting_civicrm_ansible.nodeapi.inc';
+
+/**
+ * Implements hook_init().
+ */
+function hosting_civicrm_ansible_init() {
+  drupal_add_css(drupal_get_path('module', 'hosting_civicrm_ansible') . '/hosting_civicrm_ansible.css');
+}
+
+/**
+ * Implements hook_node_load().
+ */
+function hosting_civicrm_ansible_node_load($nodes, $types) {
+  foreach ($nodes as $node) {
+    if (!in_array($node->type, ['site', 'wpsite'])) {
+      continue;
+    }
+
+    // Fetch custom data for this site
+    $result = db_query('SELECT * FROM {hosting_civicrm_ansible} WHERE nid = :nid', array(':nid' => $node->nid))->fetchObject();
+
+    if (empty($result)) {
+      return;
+    }
+
+    // If no specific cron interval was set for this site, use the default.
+    // Disabled cron has a -1 value and the Ansible playbooks know how to handle this
+    $node->civicrm_ansible_cron_interval = $result->civicrm_cron_interval ?: variable_get('hosting_civicrm_ansible_cron_default_interval', 900);
+
+    $node->civicrm_ansible_cron_user = $result->civicrm_cron_user ?: '';
+    $node->civicrm_ansible_sitekey = $result->civicrm_sitekey ?: '';
+    $node->civicrm_ansible_credkey = $result->civicrm_credkey ?: '';
+    $node->civicrm_ansible_signkey = $result->civicrm_signkey ?: '';
+    $node->civicrm_ansible_sftpchroot_keys = $result->sftpchroot_keys ?: '';
+    $node->civicrm_ansible_mysqlro_keys = $result->mysqlro_keys ?: '';
+    $node->civicrm_ansible_mysqlrw_keys = $result->mysqlrw_keys ?: '';
+
+    // @todo Generate new keys if empty? see what hosting_civicrm did
+    // CIVICRM_SITE_KEY
+    // CIVICRM_CRED_KEYS aes-cbc:hkdf-sha256:{{ (inventory_hostname + aegir_salt) | hash('sha256') }}'
+    // CIVICRM_SIGN_KEYS jwt-hs256:hkdf-sha256:{{ (inventory_hostname + aegir_salt) | hash('sha256')
+  }
+}
+
+/**
+ * Implements hook_node_view().
+ */
+function hosting_civicrm_ansible_node_view($node, $view_mode, $langcode) {
+  $node->content['hosting_civicrm_ansible'] = [
+    '#weight' => 3000,
+  ];
+
+  $node->content['hosting_civicrm_ansible']['#prefix'] = '<div id="hosting-civicrm-ansible-info">';
+
+  if (in_array($node->type, ['site', 'wpsite'])) {
+    // Display the sftp login, if enabled
+    $node->content['hosting_civicrm_ansible']['sftpchroot_keys'] = [
+      '#type' => 'item',
+      '#title' => t('Ansible - SFTP access'),
+      '#weight' => 10,
+      '#markup' => ($node->civicrm_ansible_sftpchroot_keys ? hosting_civicrm_ansible_inventory_shortname($node->title) . '@' . $_SERVER['SERVER_NAME'] : 'n/a'),
+    ];
+
+    // Display the CiviCRM cron output
+    $cron_text = '<p>' . $node->civicrm_ansible_cron_interval == HOSTING_CIVICRM_ANSIBLE_CRON_SITE_DISABLED ? t('Disabled') : t('Every !interval', array('!interval' => format_interval($node->civicrm_ansible_cron_interval))) . '</p>';
+
+    if ($node->civicrm_ansible_cron_interval > 0) {
+      $cron_last_output = _hosting_ansible_cron_last_output($node);
+      $cron_text .= '<div class="hosting-civicrm-ansible-cron-output">' . $cron_last_output . '</div>';
+    }
+
+    $node->content['hosting_civicrm_ansible']['ansible_last_civicrm_cron'] = [
+      '#type' => 'item',
+      '#title' => t('Ansible - CiviCRM cron run'),
+      '#weight' => 10,
+      '#markup' => $cron_text,
+    ];
+    $node->content['hosting_civicrm_ansible']['ansible_civicrm_cron_user'] = [
+      '#type' => 'item',
+      '#title' => t('Ansible - CiviCRM cron user'),
+      '#weight' => 11,
+      '#markup' => $node->civicrm_ansible_cron_user ?: 'none',
+    ];
+  }
+
+  if (in_array($node->type, ['site', 'wpsite']) || ($node->type == 'server' && !empty($node->services['db']))) {
+    // Display database disk space usage
+    $stats = [];
+
+    // Workaround a bug where the db_name is not being populated anyore in hosting_site
+    // to some extent, it's OK, because it's duplicated information
+    if (empty($node->db_name)) {
+      $drushrc = $node->publish_path . '/sites/' . $node->title . '/drushrc.php';
+      if (file_exists($drushrc)) {
+        require_once $node->publish_path . '/sites/' . $node->title . '/drushrc.php';
+        if (!empty($options['db_name'])) {
+          $node->db_name = $options['db_name'];
+        }
+      }
+    }
+
+    if (isset($node->db_name)) {
+      exec('sudo /usr/local/bin/aegir-db-filestats ' . escapeshellarg($node->db_name), $stats);
+    }
+    else {
+      exec('sudo /usr/local/bin/aegir-db-filestats', $stats);
+    }
+
+    $stats = implode('', $stats);
+    $stats = json_decode($stats);
+
+    foreach ($stats as $key => $val) {
+      if (!is_array($val) && !isset($val->name)) {
+        unset($stats[$key]);
+      }
+    }
+
+    $level = 0;
+    $total = hosting_civicrm_ansible_calculate_diskusage($stats);
+
+    $formatted = '<div style="max-height: 300px; overflow-y: scroll"><table><thead><tr><th>File</th><th>Size</th></tr></thead><tbody>';
+    $tmp = [];
+    hosting_civicrm_ansible_format_diskusage($tmp, $stats, $total, $level);
+
+    // Sort by largest first
+    uasort($tmp, function($a, $b) {
+      return ($a['size'] < $b['size']);
+    });
+
+    foreach ($tmp as $t) {
+      $formatted .= $t['html'];
+    }
+
+    $formatted .= '</tbody></table></div>';
+
+    $node->content['hosting_civicrm_ansible']['database_disk_usage'] = [
+      '#type' => 'item',
+      '#title' => t('Database Disk Space Usage'),
+      '#weight' => 20,
+      '#markup' => '<div>' . $formatted . '</div>',
+    ];
+  }
+
+  $node->content['hosting_civicrm_ansible']['#suffix'] = '</div>';
+}
+
+function hosting_civicrm_ansible_node_update($node) {
+  if (in_array($node->type, ['site', 'wpsite'])) {
+    // https://www.drupal.org/node/2340291
+    db_merge('hosting_civicrm_ansible')
+      ->key(['nid' => $node->nid])
+      ->fields([
+        'civicrm_cron_interval' => !empty($node->civicrm_ansible_cron_interval) ? $node->civicrm_ansible_cron_interval : variable_get('hosting_civicrm_ansible_cron_default_interval', 900),
+        'civicrm_cron_user' => !empty($node->civicrm_ansible_cron_user) ? $node->civicrm_ansible_cron_user : '',
+        'civicrm_sitekey' => $node->civicrm_ansible_sitekey ?? NULL,
+        'civicrm_credkey' => $node->civicrm_ansible_credkey ?? NULL,
+        'civicrm_signkey' => $node->civicrm_ansible_signkey ?? NULL,
+        'sftpchroot_keys' => $node->civicrm_ansible_sftpchroot_keys ?? NULL,
+        'mysqlrw_keys' => $node->civicrm_ansible_mysqlrw_keys ?? NULL,
+        'mysqlro_keys' => $node->civicrm_ansible_mysqlro_keys ?? NULL,
+      ])
+      ->execute();
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function hosting_civicrm_ansible_form_hosting_settings_alter(&$form, $form_state) {
+  $options = hosting_civicrm_ansible_interval_options();
+  unset($options[0]);
+
+  $form['hosting_civicrm_ansible_cron_default_interval'] = [
+    '#type' => 'select',
+    '#title' => t('Ansible - Default CiviCRM cron interval'),
+    '#options' => $options,
+    '#description' => t('The CiviCRM cron interval to use for all sites unless overridden on the site node itself.'),
+    '#default_value' => variable_get('hosting_civicrm_ansible_cron_default_interval', 900),
+  ];
+
+  // Add some weight to the buttons to push them to the bottom of the form.
+  $form['buttons']['#weight'] = 1000;
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Add the CiviCRM cron interval setting to 'site' content-type node forms.
+ */
+function hosting_civicrm_ansible_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id != 'site_node_form') {
+    return;
+  }
+  if (!user_access('edit site')) {
+    return;
+  }
+  if (isset($form['nid']['#value'])) {
+    $form['civicrm_ansible_sitekey'] = [
+      '#type' => 'textfield',
+      '#title' => t('CiviCRM Site Key'),
+      '#description' => t('If empty, a new key will be randomly generated.'),
+      '#default_value' => $form['#node']->civicrm_ansible_sitekey,
+      '#weight' => 9,
+    ];
+    $form['civicrm_ansible_credkey'] = [
+      '#type' => 'textfield',
+      '#title' => t('CiviCRM Credentials Key'),
+      '#description' => t('If empty, a new key will be randomly generated.'),
+      '#default_value' => $form['#node']->civicrm_ansible_credkey,
+      '#weight' => 10,
+    ];
+    $form['civicrm_ansible_signkey'] = [
+      '#type' => 'textfield',
+      '#title' => t('CiviCRM Sign Key'),
+      '#description' => t('If empty, a new key will be randomly generated.'),
+      '#default_value' => $form['#node']->civicrm_ansible_signkey,
+      '#weight' => 11,
+    ];
+    $form['civicrm_ansible_sftpchroot_keys'] = [
+      '#type' => 'textarea',
+      '#title' => t('Ansible - sFTP chroot public keys'),
+      '#description' => t('Enter ssh public keys to grant sFTP access to the <em>files</em> directory of the site.'),
+      '#default_value' => $form['#node']->civicrm_ansible_sftpchroot_keys,
+      '#weight' => 12,
+    ];
+    $form['civicrm_ansible_mysqlro_keys'] = [
+      '#type' => 'textarea',
+      '#title' => t('Ansible - MySQL read-only access ssh public keys'),
+      '#description' => t('Enter ssh public keys to grant MySQL read-only access to the site database. The username will be !user.'),
+      '#default_value' => $form['#node']->civicrm_ansible_mysqlro_keys,
+      '#weight' => 13,
+    ];
+    $form['civicrm_ansible_mysqlrw_keys'] = [
+      '#type' => 'textarea',
+      '#title' => t('Ansible - MySQL write access ssh public keys'),
+      '#description' => t('Enter ssh public keys to grant MySQL write access to the site database. The username will be !user.'),
+      '#default_value' => $form['#node']->civicrm_ansible_mysqlrw_keys,
+      '#weight' => 14,
+    ];
+    $form['civicrm_ansible_cron_interval'] = [
+      '#type' => 'select',
+      '#title' => t('Ansible - CiviCRM cron interval'),
+      '#options' => hosting_civicrm_ansible_interval_options(),
+      '#description' => t('Cron will always run every 15 minutes. The CiviCRM cron will be automatically run for this site at the interval defined here.'),
+      '#default_value' => $form['#node']->civicrm_ansible_cron_interval,
+      '#weight' => 15,
+    ];
+    $form['civicrm_ansible_cron_user'] = [
+      '#type' => 'textfield',
+      '#title' => t('Ansible - CiviCRM cron user'),
+      '#description' => t('Optional: Run the CiviCRM cron using this user. The cron is executed using "cv cron" (requires cv 0.3.65). If no username is specified, jobs are run with admin permissions and any activity created are associated with the default organizational contact.'),
+      '#default_value' => '',
+      '#weight' => 16,
+    ];
+  }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ *
+ * Add the CiviCRM cron interval setting to wpsite content-type node forms.
+ */
+function hosting_civicrm_ansible_form_wpsite_node_form_alter(&$form, $form_state) {
+  hosting_civicrm_ansible_form_site_node_form_alter($form, $form_state);
+}
+
+/**
+ * Returns an array of options for the CiviCRM cron interval.
+ *
+ * @return
+ *   An associative array with the interval in seconds as key, and a
+ *   human-readable interval as value.
+ */
+function hosting_civicrm_ansible_interval_options() {
+  $options = [
+    HOSTING_CIVICRM_ANSIBLE_CRON_SITE_DISABLED => t('Disabled'),
+  ];
+  $options += drupal_map_assoc(array(60, 300, 600, 900, 1800, 3600, 21600, 86400), 'format_interval');
+
+  return $options;
+}
+
+/**
+ * Return the last CiviCRM cron for a site
+ */
+function _hosting_ansible_cron_last_output($node) {
+  $prefix = ($node->type == 'site' ? 'd7' : 'wp') . 'civicron_';
+  if (!empty($node->software)) {
+    if ($node->software == 'WordPress') {
+      $prefix = 'wpcivicron_';
+    }
+    elseif ($node->software == 'CiviCRM') {
+      $prefix = 'civicron_';
+    }
+  }
+  $shortname = hosting_civicrm_ansible_inventory_shortname($node->title);
+  $service = $prefix . $shortname;
+
+  ob_start();
+  passthru('sudo /usr/local/bin/aegir-systemctl-status ' . escapeshellarg($service));
+  $output = ob_get_clean();
+
+  // Highlight the last cron run
+  $output = preg_replace('/; (.* ago)/', '; <span class="hosting-civicrm-ansible-highlight">\1</span>', $output);
+  // Add space after output to separate from the CMS cron
+  $output .= "\n";
+
+  // CMS cron
+  $service = NULL;
+
+  if ($node->type == 'site' && !empty($node->software)) {
+    if (substr($node->software, 0, 6) == 'Drupal') {
+      $service = 'd7corecron_' . $shortname;
+    }
+    if ($node->software == 'WordPress') {
+      $service = 'wpcorecron_' . $shortname;
+    }
+  }
+  // Compatibility with older Aegir
+  if ($node->type == 'wpsite') {
+    $service = 'wpcorecron_' . $shortname;
+  }
+
+  if ($service) {
+    ob_start();
+    passthru('sudo /usr/local/bin/aegir-systemctl-status ' . escapeshellarg($service));
+    $out2 = ob_get_clean();
+    $out2 = preg_replace('/; (.* ago)/', '; <span class="hosting-civicrm-ansible-highlight">\1</span>', $out2);
+    $output .= $out2;
+  }
+
+  return $output;
+}
+
+/**
+ * Implements hook_ansible_inventory_alter from the 'aegir_ansible' module
+ *
+ * @see https://www.drupal.org/project/aegir_ansible/
+ */
+function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
+  if (function_exists('backdrop_page_is_cacheable')) {
+    backdrop_page_is_cacheable(FALSE);
+  }
+
+  $inventory->all = [
+    'vars' => [],
+  ];
+  $inventory->platforms = [
+    'hosts' => [],
+  ];
+  $inventory->servers = [
+    'hosts' => [],
+  ];
+
+  // Ex: when fetching the inventory remotely, for updating icinga, we do
+  // not want to use ansible_ssh_host=localhost, it would cause weird problems
+  // with delegate_to
+  if (empty($_REQUEST['remote'])) {
+    // @todo Why on platforms?
+    $inventory->platforms['vars']['ansible_ssh_host'] = 'localhost';
+    $inventory->servers['vars']['ansible_ssh_host'] = 'localhost';
+  }
+
+  // Platforms
+  $platforms = hosting_civicrm_ansible_get_all_platforms();
+  foreach ($platforms as $platform) {
+    $shortname = $platform['shortname'];
+    // Exception for the admin UI (hostmaster)
+    if ($platform['publish_path'] == '/var/aegir/admin/web') {
+      $inventory->platforms['hosts'][] = 'admin';
+    }
+    else {
+      $inventory->platforms['hosts'][] = $shortname;
+    }
+    $inventory->{'_meta'}->hostvars->{$shortname} = $platform;
+  }
+
+  // Sites
+  $nids = hosting_civicrm_ansible_get_all_sites();
+  $site_nodes = node_load_multiple($nids);
+
+  // Get the last-login from our usage stats, if available
+  $usage_log = NULL;
+  if (file_exists('/var/log/aegir/usage.log')) {
+    $usage_log = file_get_contents('/var/log/aegir/usage.log');
+  }
+
+  // Salt for various salts (ex: Drupal10 salt_hash, or WordPress AUTH_KEY/etc
+  // Intentionally regenerated every time. Sites will update it on Verify.
+  $salt = bin2hex(random_bytes(64));
+  $inventory->all['vars']['aegir_salt'] = $salt;
+
+  // Save the PHP version, for when it is necessary in nginx configurations
+  $phpversion = phpversion();
+  $parts = explode('.', $phpversion);
+  $inventory->all['vars']['phpversion'] = $parts[0] . '.' . $parts[1];
+
+  // Set a global for most global confs (we also set it for each site)
+  $inventory->all['vars']['aegir_managed'] = 'Managed by Aegir on ' . date('Y-m-d H:i:s');
+
+  foreach ($site_nodes as $node) {
+    // Remove the top-level domain name from the shortname
+    $shortname = hosting_civicrm_ansible_inventory_shortname($node->title);
+
+    $last_login = '';
+    if (preg_match('/,' . $node->title . ',LastLogin:([-0-9]+)/', $usage_log, $matches)) {
+      $last_login = $matches[1];
+    }
+
+    // Detect if Drupal is using a web subdirectory
+    $site_root = $node->publish_path;
+    if (is_dir($site_root . '/web')) {
+      $site_root = $site_root . '/web';
+    }
+    // Remove the trailing slash (Ansible has trouble with things like "site_root|dirname")
+    if (substr($site_root, -1, 1) == '/') {
+      $site_root = substr($site_root, 0, -1);
+    }
+
+    // Drupal install profile
+    $profile = NULL;
+    if ($node->profile) {
+      $profile_node = node_load($node->profile);
+      $profile = $profile_node->short_name;
+    }
+
+    // DB server
+    $db_server = node_load($node->db_server);
+
+    // Set the UF for CiviCRM
+    $civicrm_uf_map = [
+      'Drupal10' => 'Drupal8',
+      'Drupal9' => 'Drupal8',
+      'Drupal7' => 'Drupal',
+      'CiviCRM' => 'Standalone',
+    ];
+    $civicrm_uf = $civicrm_uf_map[$node->software] ?? $node->software ?? '';
+
+    // Fetch site aliases (for now, we do not care about the redirection setting, we always redirect)
+    $aliases = [];
+    // This is what Aegir sets as the value for "no redirect"
+    $aliases_redirection = "0";
+    $result = db_query('SELECT * FROM hosting_site_alias WHERE nid = :nid', [':nid' => $node->nid]);
+    foreach ($result as $record) {
+      $aliases[] = $record->alias;
+      // This uses only the last value, but normally they all redirect, or they do not
+      $aliases_redirection = $record->redirection;
+    }
+
+    $inventory->{'_meta'}->hostvars->{$node->title} = [
+      'nid' => $node->nid,
+      // The 'cms' is only for backwards compatibility
+      'cms' => 'drupal',
+      'software' => $node->software ?? '',
+      'civicrm_uf' => $civicrm_uf,
+      'profile' => $profile,
+      'language' => $node->site_language,
+      'aliases' => $aliases,
+      'aliases_redirection' => $aliases_redirection,
+      // We use the CiviCRM values (and capitalisation)
+      'site_environment' => $node->environment === 1 ? 'Production' : 'Development',
+      'site_shortname' => $shortname,
+      'site_root' => $site_root,
+      'site_path' => $site_root . '/sites/' . $node->title,
+      'site_status' => $node->site_status,
+      'platform_name' => $platforms[$node->platform]['shortname'],
+      'db_name' => $node->db_name ?? '',
+      'db_passwd' => $node->db_passwd ?? '',
+      'db_host' => $db_server->title,
+      'db_port' => $db_server->services['db']->port,
+      // @todo db https setting would be nice
+      'db_ssl' => '',
+      'civicrm_ansible_cron_interval' => $node->civicrm_ansible_cron_interval ?: variable_get('hosting_civicrm_ansible_cron_default_interval', 900),
+      'civicrm_ansible_cron_user' => $node->civicrm_ansible_cron_user ?: '',
+      'civicrm_site_key' => $node->civicrm_ansible_sitekey ?: '',
+      'civicrm_cred_key' => $node->civicrm_ansible_credkey ?: '',
+      'civicrm_sign_key' => $node->civicrm_ansible_signkey ?: '',
+      'cms_cron_interval' => $node->cron_interval ?: 0,
+      // hosting_http_basic_auth
+      'http_basic_auth_username' => $node->http_basic_auth_username ?: '',
+      'http_basic_auth_password' => !empty($node->http_basic_auth_password) ? hash('sha256', $node->http_basic_auth_password) : '',
+      'http_basic_auth_message' => $node->http_basic_auth_message ?: '',
+      'http_basic_auth_whitelist' => !empty($node->http_basic_auth_whitelist) ? explode(' ', $node->http_basic_auth_whitelist) : [],
+      // Compatibility with hosting_wordpress
+      'cron_user' => $node->civicrm_ansible_cron_user ?: '',
+      'civicrm_ansible_sftpchroot_keys' => $node->civicrm_ansible_sftpchroot_keys,
+      'civicrm_ansible_mysqlro_keys' => $node->civicrm_ansible_mysqlro_keys,
+      'civicrm_ansible_mysqlrw_keys' => $node->civicrm_ansible_mysqlrw_keys,
+      // Useful for stats and other things
+      'created_date' => date('Y-m-d H:i:s', $node->created),
+      'last_login' => $last_login,
+      // Custom comment added in some templates
+      'aegir_managed' => 'Managed by Aegir for ' . $node->title . ' on ' . date('Y-m-d H:i:s'),
+    ];
+
+    // Re-use the provision_symbiotic_is_dev_site() from provision_symbiotic, if available
+    // @todo Rely on the 'environment' setting? or still auto-detect because people might forget?
+    if (file_exists('/var/aegir/.drush/provision_symbiotic/provision_symbiotic.drush.inc')) {
+      @require_once '/var/aegir/.drush/provision_symbiotic/provision_symbiotic.drush.inc';
+    }
+    if (function_exists('provision_symbiotic_is_dev_site')) {
+      if (provision_symbiotic_is_dev_site($node->title)) {
+        $inventory->{'_meta'}->hostvars->{$node->title}['disable_notifications'] = "1";
+      }
+    }
+
+    // @todo Deprecate civicrm_sites and only use 'sites'
+    $inventory->civicrm_sites['hosts'][] = $node->title;
+    $inventory->sites['hosts'][] = $node->title;
+  }
+
+  // Servers
+  $servers = hosting_get_servers('db');
+  $servers += hosting_get_servers('http');
+  $servers += hosting_get_servers('remote_import');
+
+  foreach ($servers as $nid => $name) {
+    $node = node_load($nid);
+    $inventory->servers['hosts'][] = $name;
+    $inventory->{'_meta'}->hostvars->{$name} = [
+      'hosting_name' => $node->hosting_name,
+    ];
+    if (!empty($node->services['db'])) {
+      $inventory->{'_meta'}->hostvars->{$name}['db'] = [];
+      $inventory->{'_meta'}->hostvars->{$name}['db']['type'] = $node->services['db']->type;
+      $inventory->{'_meta'}->hostvars->{$name}['db']['available'] = $node->services['db']->available;
+      $inventory->{'_meta'}->hostvars->{$name}['db']['port'] = $node->services['db']->port ?? 3306;
+      $inventory->{'_meta'}->hostvars->{$name}['db']['db_user'] = $node->services['db']->db_user;
+      $inventory->{'_meta'}->hostvars->{$name}['db']['db_passwd'] = $node->services['db']->db_passwd;
+    }
+    if (!empty($node->services['http'])) {
+      $inventory->{'_meta'}->hostvars->{$name}['http'] = [];
+      $inventory->{'_meta'}->hostvars->{$name}['http']['type'] = $node->services['http']->type;
+      $inventory->{'_meta'}->hostvars->{$name}['http']['available'] = $node->services['http']->available;
+      $inventory->{'_meta'}->hostvars->{$name}['http']['port'] = $node->services['http']->port ?? 80;
+      $inventory->{'_meta'}->hostvars->{$name}['http']['restart_cmd'] = $node->services['http']->restart_cmd ?? '';
+    }
+  }
+}
+
+/**
+ * Returns the site shortname for the inventory.
+ */
+function hosting_civicrm_ansible_inventory_shortname($uri) {
+  // Get the base name of the Aegir frontend, assuming the site_name is the fqdn
+  // We will later remove this part from the site URL for the short systemd unit name
+  // Useful for farms where the are sites using a subdomain.
+  // Ex: aegir = aegir1.example.org
+  // and: site = mysite.example.org
+  // then the shortname = mysite
+  $aegir_server_url = variable_get('site_name');
+  if (defined('BACKDROP_ROOT')) {
+    $aegir_server_url = check_plain(config_get_translated('system.core', 'site_name'));
+  }
+  $parts = explode('.', $aegir_server_url);
+  array_shift($parts);
+  $aegir_server_url = implode('.', $parts);
+
+  // Remove the top-level domain name from the shortname
+  $shortname = $uri;
+  $shortname = str_replace($aegir_server_url, '', $shortname);
+  $shortname = str_replace('.', '', $shortname);
+  $shortname = str_replace('-', '', $shortname);
+
+  return $shortname;
+}
+
+/**
+ * Calculate recursively the total disk usage in a directory.
+ */
+function hosting_civicrm_ansible_calculate_diskusage($stats) {
+  $total = 0;
+
+  foreach ($stats as $file) {
+    if (is_array($file)) {
+      $total += hosting_civicrm_ansible_calculate_diskusage($file);
+    }
+    else {
+      $total += $file->asize;
+    }
+  }
+
+  return $total;
+}
+
+/**
+ * Semi-recursive display of files/size in a given directory.
+ * We only want the first and 2nd level data (ex: /var/lib/mysql/ and the databases in it, but not the details)
+ */
+function hosting_civicrm_ansible_format_diskusage(&$formatted, $val, $total, $level) {
+  foreach ($val as $file) {
+    if (is_array($file)) {
+      $subtotal = hosting_civicrm_ansible_calculate_diskusage($file);
+
+      // The first entry is the directory itself (the space taken by the dir entry, not the recursive total)
+      $formatted[] = [
+        'size' => $subtotal,
+        'html' => '<tr><td><div style="background: #0f0; white-space: nowrap; width: ' . round($subtotal/$total*100) . '%;">' . $file[0]->name . '</div></td><td>' . format_size($subtotal) . "</td></tr>",
+      ];
+
+      unset($file[0]);
+
+      if ($level == 0) {
+        hosting_civicrm_ansible_format_diskusage($formatted, $file, $total, $level+1);
+      }
+    }
+    else {
+      // Displaying "Apparent size", not actual disk allocation (which mostly impacts small files)
+      // NB: format_size is drupal-specific (also exists in d8)
+      $formatted[] = [
+        'size' => $file->asize,
+        'html' => '<tr><td><div style="background: #0f0; white-space: nowrap; width: ' . round($file->asize/$total*100) . '%;">' . $file->name . '</div></td><td>' . format_size($file->asize) . "</td></tr>",
+      ];
+    }
+  }
+}
+
+/**
+ * Based on hosting_civicrm_get_sites() but also returns disabled sites
+ */
+function hosting_civicrm_ansible_get_all_sites() {
+  $sites = [];
+
+  $op = empty($_REQUEST['site_status']) ? '!=' : '=';
+  $result = db_query("SELECT n.nid FROM {node} n LEFT JOIN {hosting_site} s ON n.nid=s.nid WHERE n.type = :type and s.status $op :status", [
+    ':type' => 'site',
+    ':status' => $_REQUEST['site_status'] ?? HOSTING_SITE_DELETED,
+  ]);
+
+  foreach ($result as $record) {
+    $sites[] = $record->nid;
+  }
+
+  return $sites;
+}
+
+/**
+ * Returns all platforms
+ */
+function hosting_civicrm_ansible_get_all_platforms() {
+  $platforms = [];
+
+  $result = db_query('SELECT p.* FROM {hosting_platform} p LEFT JOIN {node} n ON n.nid = p.nid WHERE p.status != :status', [
+    ':status' => HOSTING_PLATFORM_DELETED,
+  ]);
+
+  foreach ($result as $record) {
+    $resource = $record->publish_path;
+    $resource = preg_replace('#/web$#', '', $resource);
+    $resource = basename($resource);
+
+    $platforms[$record->nid] = [
+      'shortname' => $resource,
+      'nid' => $record->nid,
+      'web_server_nid' => $record->web_server,
+      'publish_path' => $record->publish_path,
+      'verified' => $record->verified,
+      'status' => $record->status,
+      'software' => $record->software ?? '',
+      'site_post_install_cmd' => $record->site_post_install_cmd ?? '',
+      'site_post_import_cmd' => $record->site_post_import_cmd ?? '',
+      'site_post_verify_cmd' => $record->site_post_verify_cmd ?? '',
+    ];
+  }
+
+  return $platforms;
+}
+
+/**
+ * Helper function to execute and log the output of an Ansible command
+ *
+ * Based on provision_civicrm_ansible_execute() but that function was
+ * specific to CiviCRM sites and using tags, using the old Symbiotic playbooks.
+ * Only supports Backdrop.
+ *
+ * @param $site String Ansible resource
+ * @param $playbook String Ansible playbook
+ */
+function hosting_civicrm_ansible_execute($task) {
+  // Extract the resource name and playbook to run
+  $resource = $playbook = '';
+  $node = NULL;
+
+  // Flush the cache because it's often problematic
+  // Ex: if a site is migrated to a new URL, the old URL would be cached
+  // and somehow because hosting-queued runs as a daemon, it causes other headaches
+  entity_get_controller('node')->resetCache();
+
+  // Ex: provision-verify (verify) or provision-backup-delete (backup-delete)
+  hosting_task_log($task->vid, 'info', 'hosting_civicrm_ansible_execute: task_command: ' . $task->task_command);
+  $task_parts = explode('-', $task->task_command, 2);
+  $action = $task_parts[1] ?? NULL;
+
+  if ($task_parts[0] != 'provision') {
+    throw new Exception('Unexpected task format: ' . $task->task_command . " Expected: provision-xyz");
+  }
+
+  $node = node_load($task->rid);
+  // Ex: site, platform, server
+  $entity = $node->type;
+  // Ex: site uri, server hostname
+  $resource = $node->title;
+  $playbook = $entity . '/' . $action . '.yml';
+  hosting_task_log($task->vid, 'info', 'hosting_civicrm_ansible_execute: preparing to run: ' . $playbook);
+
+  // For platforms, we always use a shortname based on the path
+  // not the human-readable version
+  if ($entity == 'platform') {
+    // Ex: "/var/aegir/platforms/civicrm-prod" becomes "civicrm-prod"
+    $resource = db_query('SELECT publish_path FROM {hosting_platform} WHERE vid = :vid', array(':vid' => $node->vid))->fetchField();
+    $resource = preg_replace('#/web$#', '', $resource);
+    $resource = basename($resource);
+  }
+
+  hosting_task_log($task->vid, 'info', 'hosting_civicrm_ansible_execute: inventory resource: ' . $resource);
+
+  if (!$resource || !$playbook) {
+    hosting_task_log($task->vid, 'error', 'hosting_civicrm_ansible_execute could not find the resource or playbook for task: ' . print_r($task, 1) . ' -- node: ' . print_r($node, 1), 'error');
+    $task->task_status = HOSTING_TASK_ERROR;
+    node_save($task);
+    return;
+  }
+
+  // Fetch any task arguments
+  $args = hosting_civicrm_ansible_get_arguments($task->nid);
+
+  $command = 'sudo /usr/local/bin/aegir-ansible ' . escapeshellarg($resource) . ' ' . escapeshellarg($playbook) . ' ' . $task->nid . ' ' . implode(' ', $args);
+  $bt = function_exists('bt') ? 'bt' : 'dt';
+  hosting_task_log($task->vid, 'ok', $bt('CiviCRM Ansible: running: !command', ['!command' => $command]));
+  // We append this here to make the above easier to read
+  $command .= ' 2>&1';
+
+  $task->task_status = HOSTING_TASK_PROCESSING;
+  node_save($task);
+
+  // Using this rather complicated method so that ansible does not complain about non-blocking IO
+  // Somewhat avoiding drush functions because they do not seem to work
+  $descriptors = [
+    // respectively stdin, stdout, stderr
+    0 => ['pipe', 'r'],
+    1 => ['pipe', 'w'],
+    2 => ['pipe', 'w'],
+  ];
+
+  $process = proc_open($command, $descriptors, $pipes);
+
+  // Set non-blocking mode
+  stream_set_blocking($pipes[1], FALSE);
+  stream_set_blocking($pipes[2], FALSE);
+
+  if (is_resource($process)) {
+    // Close input pipe
+    fclose($pipes[0]);
+
+    hosting_task_log($task->vid, 'info', 'CiviCRM Ansible output...');
+
+    while (TRUE) {
+      // Read output and error
+      // ignoring error output because they were piped to stdout
+      $output = stream_get_contents($pipes[1]);
+      // $error = stream_get_contents($pipes[2]);
+
+      $lines = explode("\n", $output);
+
+      foreach ($lines as $key => $line) {
+        $line = trim($line);
+        $line = preg_replace('/ \*+$/', '', $line);
+        if (!$line) {
+          continue;
+        }
+        // We do not log as warning/errors if the task error was explicitly ignored (ignore_errors: true) except for dehydrated
+        // because we explicitly ignore those errors, but we should still show them to the user (the fail might be for another domain)
+        if (preg_match('/^(fail|error|fatal)/i', $line) && (preg_match('/dehydrated/', $line) || $lines[$key+1] != '...ignoring')) {
+          // @todo This warning should be 'error' but we are having too many problems with Aegir rolling-back for no reason
+          hosting_task_log($task->vid, 'warning', $line);
+          $task->task_status = HOSTING_TASK_WARNING;
+        }
+        elseif (preg_match('/warning/i', $line)) {
+          hosting_task_log($task->vid, 'warning', $line);
+          $task->task_status = HOSTING_TASK_WARNING;
+        }
+        elseif (preg_match('/^changed:/', $lines[$key+1])) {
+          hosting_task_log($task->vid, 'success', $line);
+        }
+        else {
+          hosting_task_log($task->vid, 'info', $line);
+        }
+      }
+
+      $status = proc_get_status($process);
+      if (!$status['running']) {
+        break;
+      }
+
+      // sleep 0.1 sec to reduce CPU usage
+      usleep(100000);
+    }
+
+    // Close output and error pipes
+    fclose($pipes[1]);
+    fclose($pipes[2]);
+
+    // Close the process
+    $exitCode = proc_close($process);
+
+    // @todo Warnings should be 'error' but we are having too many problems with Aegir rolling-back for no reason
+    // The new aegir does not rollback, so maybe we can change this?
+    $task->task_status = $exitCode == 0 ? HOSTING_TASK_SUCCESS : HOSTING_TASK_WARNING;
+
+    // Normally one of the above lines should have printed a warning
+    // but just in case, log a warning at the end (not at the beginning, or it breaks
+    // the "jump to first warnin").
+    if ($exitCode) {
+      hosting_task_log($task->vid, 'warning', 'CiviCRM Ansible exited with an error');
+    }
+  }
+
+  // Update the task_status
+  $task->executed = time();
+  node_save($task);
+}
+
+/**
+ * Given a task node ID, returns the task arguments in an
+ * ansible-friendly way (so that we can pass them on the CLI)
+ */
+function hosting_civicrm_ansible_get_arguments($task_nid) {
+  $args = [];
+  $args[] = 'task=' . $task_nid;
+
+  $result = db_query('SELECT * FROM {hosting_task_arguments} WHERE nid = :nid', [':nid' => $task_nid]);
+
+  foreach ($result as $record) {
+    if ($record->name == 'bid') {
+      $value = db_query('SELECT filename FROM {hosting_site_backups} WHERE bid = :bid', [':bid' => $record->value])->fetchField();
+      $args[] = 'backup_filename=' . escapeshellarg($value);
+    }
+    elseif ($record->name == 'target_platform') {
+      $value = db_query('SELECT publish_path FROM hosting_platform WHERE nid = :nid', [':nid' => $record->value])->fetchField();
+      // @todo we might want to just override the site_root?
+      $args[] = 'new_site_root=' . escapeshellarg($value);
+    }
+    elseif ($record->name == 'new_db_server') {
+      // @todo we might want to just override the db_host?
+      $value = db_query('SELECT title FROM node WHERE nid = :nid', [':nid' => $record->value])->fetchField();
+      $args[] = 'new_db_host=' . escapeshellarg($value);
+    }
+
+    // Ex: new_uri
+    // and also include the original reference (ex: target_platform is useful)
+    $args[] = $record->name . '=' . escapeshellarg($record->value);
+  }
+
+  return $args;
+}

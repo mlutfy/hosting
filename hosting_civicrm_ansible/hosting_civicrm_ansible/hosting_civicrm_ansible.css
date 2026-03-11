@@ -1,0 +1,27 @@
+#hosting-civicrm-ansible-info {
+  clear: both;
+}
+#hosting-civicrm-ansible-info .form-item {
+  padding: 1em 0 !important;
+}
+#hosting-civicrm-ansible-info label {
+  /* remove 'absolute' */
+  position: inherit !important;
+  font-size: 1em !important;
+  color: black !important;
+}
+.hosting-civicrm-ansible-cron-output {
+  overflow-x: scroll;
+  width: 900px;
+  background: black;
+  color: white;
+  padding: 1em 0.5em;
+  border: 1px solid #777;
+  /* make it look like a 'pre' */
+  font-family: monospace;
+  white-space: pre;
+  unicode-bidi: embed;
+}
+.hosting-civicrm-ansible-highlight {
+  color: #0f0;
+}
