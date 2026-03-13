@@ -787,7 +787,7 @@ function hosting_civicrm_ansible_execute($task) {
           hosting_task_log($task->vid, 'warning', $line);
           $task->task_status = HOSTING_TASK_WARNING;
         }
-        elseif (preg_match('/^changed:/', $lines[$key+1])) {
+        elseif (preg_match('/^(changed|ok):/', $lines[$key+1])) {
           hosting_task_log($task->vid, 'success', $line);
         }
         else {
