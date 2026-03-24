@@ -1258,10 +1258,10 @@ function hosting_task_view($node, $view_mode, $langcode = NULL) {
       );
     }
     if ($table = _hosting_task_log_table($node)) {
-      $node->content['hosting_log'] = array(
+      $node->content['hosting_log'] = [
         '#weight' => 10,
-        'table' => $table,
-      );
+        'markup' => $table,
+      ];
     }
   }
   return $node;
@@ -1271,15 +1271,20 @@ function hosting_task_view($node, $view_mode, $langcode = NULL) {
  * Display table containing the logged information for this task.
  */
 function _hosting_task_log_table($node, $last_position = 0) {
-
   $types = variable_get('hosting_task_logs_types_display', hosting_log_types());
   $query_args = array(':vid' => $node->vid, ':lid' => $last_position, ':types' => $types);
-
   $result = db_query("SELECT * FROM {hosting_task_log} WHERE vid = :vid AND lid > :lid AND type IN (:types) ORDER BY lid", $query_args);
+
   if ($result) {
     $headers = ['data' => 'Log message'];
     $rows = [];
     $last_lid = $last_position;
+
+    // For logging Ansible debug in a "details" accordion
+    $in_task = FALSE;
+    $task_label = '';
+    $task_details = [];
+
     foreach ($result as $entry) {
       $message = filter_xss($entry->message);
 
@@ -1296,60 +1301,131 @@ function _hosting_task_log_table($node, $last_position = 0) {
         $message = '<a name="warning"></a>' . $message;
       }
 
-      $row = [
-        [
-          'data' => $message,
-          'class' => ['hosting-status'],
-        ],
-      ];
+      if ($in_task) {
+        if (strpos($message, 'TASK') === 0 || strpos($message, 'RUNNING HANDLER') === 0 || strpos($message, 'PLAY RECAP') === 0) {
+          $recap = _hosting_task_recap($task_details);
+          $rows[] = '<details class="hosting-status-wrapper ' . _hosting_task_log_class($recap) . '">';
+          $rows[] = '<summary>' . $task_label . '<div style="float: right;">' . $recap . '</div></summary>';
+          $rows[] = '<div class="hosting-task-log-details">';
+          foreach ($task_details as $task_msg) {
+            $rows[] = '<div class="hosting-status ' . _hosting_task_log_class($task_msg) . '">' . $task_msg . '</div>';
+          }
+          $rows[] = '</div>';
+          $rows[] = '</details>';
+          $in_task = FALSE;
+          $task_details = [];
+        }
+        else {
+          $task_details[] = $message;
+          // @todo FIXME Avoiding to update the last_lid for now
+          // because in theory it could mean that the "details" div could not be closed
+          // if we are doing live updates via ajax (which afaik does not work at the moment)
+          // The downside is that some rows might be shown multiple times.
+          continue;
+        }
+      }
 
-      $rows[] = [
-        'data' => $row,
-        'class' => [_hosting_task_log_class($entry->type)],
-      ];
+      // Separate condition from above, because the above might switch the flag off
+      if (!$in_task) {
+        if (strpos($message, 'TASK') === 0 || strpos($message, 'RUNNING HANDLER') === 0) {
+          $task_label = $message;
+          $in_task = TRUE;
+          // See comment above bout $last_lid
+          continue;
+        }
+        else {
+          $rows[] = '<div class="hosting-status ' . _hosting_task_log_class($entry->type) . '">' . $message . '</div>';
+        }
+      }
 
       // Record that we've seen this log row.
       $last_lid = $entry->lid;
     }
 
+    $html = '<div id="hosting-task-log">' . implode('', $rows) . '</div>';
 
-    $table = array(
-      '#theme' => "table",
-      '#header' => $headers,
-      '#rows' => $rows,
-      '#attributes' => array(
+    $table = [
+      '#markup' => $html,
+      '#attributes' => [
         'id' => 'hosting-task-log',
-        'class' => array(
+        'class' => [
           'hosting-table',
-        ),
-      ),
-    );
+        ],
+      ],
+    ];
+
     // If the task has not finished executing, update via AJAX.
     if (!hosting_task_task_has_finished($node)) {
-      $table += array(
+      $table += [
         '#refresh_url' => url('hosting/task/log/ajax/' . $node->nid . '/' . $last_lid),
-        '#attached' => array(
-          'js' => array(
-            array(
-              'data' => array(
-                'hosting_task' => array(
+        '#attached' => [
+          'js' => [
+            [
+              'data' => [
+                'hosting_task' => [
                   'refresh_url' => url('hosting/task/log/ajax/' . $node->nid . '/' . $last_lid),
-                ),
-              ),
+                ],
+              ],
               'type' => 'setting',
-            ),
+            ],
             drupal_get_path('module', 'hosting_task') . '/js/hosting_task.table.js',
-          ),
-          'library' => array(
-            array('system', 'drupal.ajax'),
-          ),
-        ),
-      );
+          ],
+          'library' => [
+            ['system', 'drupal.ajax'],
+          ],
+        ],
+      ];
     }
     return $table;
   }
 
   return FALSE;
+}
+
+/**
+ * Returns a text recap of the changes (for ansible tasks)
+ */
+function _hosting_task_recap($tasks) {
+  $types = [
+    'ok' => 0,
+    'changed' => 0,
+    'included' => 0,
+    'WARNING' => 0,
+    'ERROR' => 0,
+  ];
+
+  foreach ($tasks as $task) {
+    if (preg_match('/ok: /', $task)) {
+      $types['ok']++;
+    }
+    elseif (preg_match('/changed: /', $task)) {
+      $types['changed']++;
+    }
+    elseif (preg_match('/included: /', $task)) {
+      $types['included']++;
+    }
+    elseif (preg_match('/WARNING/', $task)) {
+      $types['WARNING']++;
+    }
+    elseif (preg_match('/ERROR/', $task)) {
+      $types['ERROR']++;
+    }
+  }
+  $flatten = [];
+  foreach ($types as $type => $count) {
+    // Most of the time, there is a single "type"
+    // so we display just "changed" instead of "changed=1"
+    if ($count > 1) {
+      $flatten[] = $type . '=' . $count;
+    }
+    elseif ($count) {
+      $flatten[] = $type;
+    }
+  }
+  if (empty($flatten)) {
+    return '';
+  }
+  return implode(', ', $flatten);
 }
 
 /**
@@ -1359,6 +1435,12 @@ function _hosting_task_log_table($node, $last_position = 0) {
  * @see _drush_print_log()
  */
 function _hosting_task_log_class($type) {
+  // Ex if the $type is an ansible message ("changed: [...]")
+  $parts = explode(':', $type, 2);
+  if (count($parts) > 1) {
+    $type = $parts[0];
+  }
+
   switch (strtolower($type)) {
     case 'warning':
     case 'cancel':
@@ -1373,6 +1455,7 @@ function _hosting_task_log_class($type) {
       $type = 'queue';
       break;
     case 'ok':
+    case 'changed':
     case 'completed':
     case 'success':
       $type = 'success';
