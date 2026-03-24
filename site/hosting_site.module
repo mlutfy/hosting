@@ -52,6 +52,7 @@ function hosting_site_autoload_info() {
     'hosting_site_handler_field_canonical' => 'includes/views/handlers/hosting_site_handler_field_canonical.inc',
     'hosting_site_handler_field_language' => 'includes/views/handlers/hosting_site_handler_field_language.inc',
     'hosting_site_handler_field_status' => 'includes/views/handlers/hosting_site_handler_field_status.inc',
+    'hosting_site_handler_field_environment' => 'includes/views/handlers/hosting_site_handler_field_environment.inc',
     'hosting_site_field_handler_canonical' => 'includes/views/handlers/hosting_site_handler_field_canonical.inc',
     'hosting_site_plugin_access' => 'includes/views/plugins/hosting_site_plugin_access.inc',
     'hosting_site_db_utils' => 'includes/db_utils.php',
@@ -207,7 +208,7 @@ function hosting_site_wildcard_load($arg) {
  */
 function _hosting_site_goto_link($node) {
   $cache = cache_get("hosting:site:" . $node->nid . ":login_link");
-  if (user_access('create login-reset task') && $cache && (REQUEST_TIME < $cache->data['expire'])) {
+  if (user_access('create login task') && $cache && (REQUEST_TIME < $cache->data['expire'])) {
     $title = t("Log in to !url", array('!url' => hosting_site_canonical_url($node)));
   }
   else {
@@ -236,7 +237,7 @@ function theme_hosting_site_goto_link($variables) {
 function hosting_site_goto($node) {
   $cid = "hosting:site:" . $node->nid . ":login_link";
   $cache = cache_get($cid);
-  if (user_access('create login-reset task') && is_object($cache) && (REQUEST_TIME < $cache->data['expire'])) {
+  if (user_access('create login task') && is_object($cache) && (REQUEST_TIME < $cache->data['expire'])) {
     $theurl = $cache->data['link'];
     cache_clear_all($cid, 'cache');
   }
@@ -354,7 +355,7 @@ function hosting_site_hosting_tasks() {
     'dialog' => TRUE,
   );
 
-  $tasks['site']['login-reset'] = array(
+  $tasks['site']['login'] = array(
     'title' => t('Login link'),
     'description' => t('Generate a one-time login reset url for this site.'),
   );
@@ -482,7 +483,7 @@ function hosting_site_delete_action($node) {
  * @see: hosting_task_action_info().
  */
 function hosting_site_op_login_reset($node) {
-  hosting_add_task($node->nid, 'login-reset');
+  hosting_add_task($node->nid, 'login');
 }
 
 /**
@@ -636,6 +637,20 @@ function _hosting_site_status($node) {
   $status = (is_numeric($node)) ? $node : $node->site_status;
   $labels = hosting_site_status_codes('label');
   return $labels[$status];
+}
+
+/**
+ * Define the status types of a site
+ */
+function _hosting_site_environment($node) {
+  $environment = (is_numeric($node)) ? $node : $node->environment;
+  if ($environment == 0) {
+    return t('Development');
+  }
+  if ($environment == 1) {
+    return t('Production');
+  }
+  return t('Unknown');
 }
 
 /**

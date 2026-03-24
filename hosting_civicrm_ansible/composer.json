@@ -1,0 +1,5 @@
+{
+    "name": "coopsymbiotic/hosting_civicrm_ansible",
+    "type": "drupal-module",
+    "description": "hosting-civicrm-ansible module for Aegir"
+}

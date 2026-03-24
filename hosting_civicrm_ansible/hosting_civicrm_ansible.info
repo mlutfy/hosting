@@ -1,0 +1,6 @@
+name = Hosting CiviCRM Ansible
+description = Delegates some CiviCRM tasks to a set of Ansible playbooks
+package = Aegir CiviCRM
+dependencies[] = hosting
+core = 7.x
+backdrop = 1.x

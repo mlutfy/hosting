@@ -1,0 +1,154 @@
+<?php
+
+/**
+ * @file
+ * Define database schema and update functions for the module.
+ */
+
+/**
+ * Implements hook_schema().
+ */
+function hosting_civicrm_ansible_schema() {
+  $schema['hosting_civicrm_ansible'] = [
+    'fields' => [
+      'nid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'civicrm_cron_interval' => [
+        'type' => 'int',
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'civicrm_cron_user' => [
+        'type' => 'varchar',
+        'length' => 128,
+      ],
+      'civicrm_sitekey' => [
+        'type' => 'varchar',
+        'length' => 256,
+      ],
+      'civicrm_credkey' => [
+        'type' => 'varchar',
+        'length' => 256,
+      ],
+      'civicrm_signkey' => [
+        'type' => 'varchar',
+        'length' => 256,
+      ],
+      'sftpchroot_keys' => [
+        'type' => 'text',
+      ],
+      'mysqlro_keys' => [
+        'type' => 'text',
+      ],
+      'mysqlrw_keys' => [
+        'type' => 'text',
+      ],
+    ],
+    'primary key' => ['nid'],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Add the civicrm_cron_user field
+ *
+ * Implements hook_update_N().
+ */
+function hosting_civicrm_ansible_update_1001() {
+  if (!db_field_exists('hosting_civicrm_ansible', 'civicrm_cron_user')) {
+    db_add_field('hosting_civicrm_ansible', 'civicrm_cron_user', [
+      'type' => 'varchar',
+      'length' => 128,
+    ]);
+  }
+}
+
+/**
+ * Add the civicrm_sitekey, civicrm_credkey, civicrm_credkey fields
+ *
+ * Implements hook_update_N().
+ */
+function hosting_civicrm_ansible_update_1002() {
+  if (!db_field_exists('hosting_civicrm_ansible', 'civicrm_sitekey')) {
+    db_add_field('hosting_civicrm_ansible', 'civicrm_sitekey', [
+      'type' => 'varchar',
+      'length' => 256,
+    ]);
+  }
+  if (!db_field_exists('hosting_civicrm_ansible', 'civicrm_credkey')) {
+    db_add_field('hosting_civicrm_ansible', 'civicrm_credkey', [
+      'type' => 'varchar',
+      'length' => 256,
+    ]);
+  }
+  if (!db_field_exists('hosting_civicrm_ansible', 'civicrm_signkey')) {
+    db_add_field('hosting_civicrm_ansible', 'civicrm_signkey', [
+      'type' => 'varchar',
+      'length' => 256,
+    ]);
+  }
+}
+
+/**
+ * Fill in empty sitekey, credkey, signkey, using civicrm.settings.php.
+ */
+function hosting_civicrm_ansible_update_1003() {
+  // Drupal sites
+  if (function_exists('hosting_civicrm_ansible_get_all_sites')) {
+    $nids = hosting_civicrm_ansible_get_all_sites(TRUE);
+    $sites = node_load_multiple($nids);
+    foreach ($sites as $site) {
+      _hosting_civicrm_ansible_set_civikeys_from_file($site, $site->publish_path . '/sites/' . $site->title . '/civicrm.settings.php');
+    }
+  }
+  // WordPress sites
+  if (function_exists('hosting_get_wpsites_by_status')) {
+    $sites = hosting_get_wpsites_by_status(null, HOSTING_WPSITE_ENABLED);
+    foreach ($sites as $site) {
+      $platform = node_load($site->wpplatform);
+      _hosting_civicrm_ansible_set_civikeys_from_file($site, $platform->publish_path . '/sites/' . $site->title . '/civicrm.settings.php');
+    }
+  }
+}
+
+function _hosting_civicrm_ansible_set_civikeys_from_file($site, string $file) {
+  if (!file_exists($file)) {
+    return FALSE;
+  }
+  $contents = file_get_contents($file);
+  // credkey
+  if (empty($site->civicrm_ansible_credkey)) {
+    if (preg_match("/'_CIVICRM_CRED_KEYS', '([^']+)'/", $contents, $matches)) {
+      $site->civicrm_ansible_credkey = $matches[1];
+      node_save($site);
+    }
+    elseif (preg_match("/'CIVICRM_CRED_KEYS', '([^']+)'/", $contents, $matches)) {
+      $site->civicrm_ansible_credkey = $matches[1];
+      node_save($site);
+    }
+  }
+  // signkey
+  if (empty($site->civicrm_ansible_sitekey)) {
+    if (preg_match("/'_CIVICRM_SIGN_KEYS', '([^']+)'/", $contents, $matches)) {
+      $site->civicrm_ansible_signkey = $matches[1];
+      node_save($site);
+    }
+    elseif (preg_match("/'CIVICRM_SIGN_KEYS', '([^']+)'/", $contents, $matches)) {
+      $site->civicrm_ansible_signkey = $matches[1];
+      node_save($site);
+    }
+  }
+  // sitekey
+  if (empty($site->civicrm_ansible_sitekey)) {
+    if (preg_match("/'CIVICRM_SITE_KEY', '([^']+)'/", $contents, $matches)) {
+      $site->civicrm_ansible_sitekey = $matches[1];
+      node_save($site);
+    }
+  }
+  return TRUE;
+}

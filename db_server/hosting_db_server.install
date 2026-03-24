@@ -25,16 +25,24 @@ function hosting_db_server_schema() {
       'db_user' => array(
         'type' => 'text',
         'size' => 'big',
-        'not null' => TRUE,
+        'default' => NULL,
       ),
       'db_passwd' => array(
         'type' => 'text',
         'size' => 'big',
-        'not null' => TRUE,
+        'default' => NULL,
       ),
     ),
     'primary key' => array('vid'),
   );
 
   return $schema;
+}
+
+/**
+ * Allow the db_user and db_passwd column to be NULL (for localhost)
+ */
+function hosting_db_server_update_1000() {
+  db_query('ALTER TABLE hosting_db_server CHANGE db_user db_user TEXT DEFAULT NULL');
+  db_query('ALTER TABLE hosting_db_server CHANGE db_passwd db_passwd TEXT DEFAULT NULL');
 }

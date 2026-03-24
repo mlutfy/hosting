@@ -286,7 +286,7 @@ function hosting_task_menu_access($node, $task) {
       if (hosting_task_outstanding($node->nid, 'delete') || ($node->site_status == HOSTING_SITE_DELETED)) {
         return FALSE;
       }
-      if (($task == 'login-reset') && ($node->site_status != HOSTING_SITE_ENABLED)) {
+      if (($task == 'login') && ($node->site_status != HOSTING_SITE_ENABLED)) {
         return FALSE;
       }
       $safe_tasks = array('backup', 'backup-delete', 'verify', 'enable');
@@ -451,8 +451,8 @@ function hosting_task_permission() {
     'create unlock task' => array(
       'title' => t('create unlock task'),
     ),
-    'create login-reset task' => array(
-      'title' => t('create login-reset task'),
+    'create login task' => array(
+      'title' => t('create login task'),
     ),
     'create backup-delete task' => array(
       'title' => t('create backup-delete task'),
@@ -616,7 +616,7 @@ function hosting_task_confirm_form($form, $form_state, $node, $task) {
       drupal_set_message(t(':title has been queued for deletion.', array(':title' => $node->title)));
       drupal_goto();
     }
-    elseif ($task == 'login-reset') {
+    elseif ($task == 'login') {
       drupal_set_message(t('A one-time login link will be generated. Refresh this page in a minute, then the "Go to site.." link will display instead "Login to site.."'));
     }
     drupal_goto('node/' . $node->nid);

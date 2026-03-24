@@ -270,3 +270,10 @@ function hosting_site_update_7503() {
 function hosting_site_update_7504() {
   db_query('ALTER TABLE hosting_site CHANGE profile profile int(11) DEFAULT NULL');
 }
+
+/**
+ * Import the Views configuration during D7 to Backdrop upgrade.
+ */
+function hosting_site_update_1000() {
+  config_install_default_config('hosting_site', 'views.view.hosting_site_list');
+}
