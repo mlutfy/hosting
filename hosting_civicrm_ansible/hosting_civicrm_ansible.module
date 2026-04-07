@@ -13,6 +13,15 @@ function hosting_civicrm_ansible_init() {
 }
 
 /**
+ * Implements hook_autoload_info()
+ */
+function hosting_civicrm_ansible_autoload_info() {
+  return [
+    'HostingAnsibleProcessor' => 'includes/hosting_civicrm_ansible.processor.inc',
+  ];
+}
+
+/**
  * Implements hook_node_load().
  */
 function hosting_civicrm_ansible_node_load($nodes, $types) {
@@ -766,44 +775,25 @@ function hosting_civicrm_ansible_execute($task) {
       // Read output and error
       // ignoring error output because they were piped to stdout
       $output = stream_get_contents($pipes[1]);
-      // $error = stream_get_contents($pipes[2]);
+      HostingAnsibleProcessor::parseOutput($output, $task);
 
-      $lines = explode("\n", $output);
+      $output = stream_get_contents($pipes[2]);
+      HostingAnsibleProcessor::parseOutput($output, $task);
 
-      foreach ($lines as $key => $line) {
-        $line = trim($line);
-        $line = preg_replace('/ \*+$/', '', $line);
-        if (!$line) {
-          continue;
-        }
-        // We do not log as warning/errors if the task error was explicitly ignored (ignore_errors: true) except for dehydrated
-        // because we explicitly ignore those errors, but we should still show them to the user (the fail might be for another domain)
-        if (preg_match('/^(fail|error|fatal)/i', $line) && (preg_match('/dehydrated/', $line) || $lines[$key+1] != '...ignoring')) {
-          // @todo This warning should be 'error' but we are having too many problems with Aegir rolling-back for no reason
-          hosting_task_log($task->vid, 'warning', $line);
-          $task->task_status = HOSTING_TASK_WARNING;
-        }
-        elseif (preg_match('/warning/i', $line)) {
-          hosting_task_log($task->vid, 'warning', $line);
-          $task->task_status = HOSTING_TASK_WARNING;
-        }
-        elseif (preg_match('/^(changed|ok):/', $lines[$key+1])) {
-          hosting_task_log($task->vid, 'success', $line);
-        }
-        else {
-          hosting_task_log($task->vid, 'info', $line);
-        }
-      }
+      // sleep 0.1 sec to reduce CPU usage
+      usleep(100000);
 
       $status = proc_get_status($process);
       $exitCode = $status['exitcode'];
 
       if (!$status['running']) {
+        // Make sure to read the remaining output
+        $output = stream_get_contents($pipes[1]);
+        HostingAnsibleProcessor::parseOutput($output, $task);
+        $output = stream_get_contents($pipes[2]);
+        HostingAnsibleProcessor::parseOutput($output, $task);
         break;
       }
-
-      // sleep 0.1 sec to reduce CPU usage
-      usleep(100000);
     }
 
     // Close output and error pipes
@@ -815,7 +805,9 @@ function hosting_civicrm_ansible_execute($task) {
 
     // @todo Warnings should be 'error' but we are having too many problems with Aegir rolling-back for no reason
     // The new aegir does not rollback, so maybe we can change this?
-    $task->task_status = $exitCode == 0 ? HOSTING_TASK_SUCCESS : HOSTING_TASK_WARNING;
+    if (empty($task->task_command) || $task->task_status != HOSTING_TASK_WARNING) {
+      $task->task_status = $exitCode == 0 ? HOSTING_TASK_SUCCESS : HOSTING_TASK_WARNING;
+    }
 
     // Normally one of the above lines should have printed a warning
     // but just in case, log a warning at the end (not at the beginning, or it breaks
