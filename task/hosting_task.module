@@ -1271,12 +1271,10 @@ function hosting_task_view($node, $view_mode, $langcode = NULL) {
  * Display table containing the logged information for this task.
  */
 function _hosting_task_log_table($node, $last_position = 0) {
-  $types = variable_get('hosting_task_logs_types_display', hosting_log_types());
-  $query_args = array(':vid' => $node->vid, ':lid' => $last_position, ':types' => $types);
-  $result = db_query("SELECT * FROM {hosting_task_log} WHERE vid = :vid AND lid > :lid AND type IN (:types) ORDER BY lid", $query_args);
+  $query_args = [':vid' => $node->vid, ':lid' => $last_position];
+  $result = db_query("SELECT * FROM {hosting_task_log} WHERE vid = :vid AND lid > :lid ORDER BY lid", $query_args);
 
   if ($result) {
-    $headers = ['data' => 'Log message'];
     $rows = [];
     $last_lid = $last_position;
 
@@ -1340,6 +1338,19 @@ function _hosting_task_log_table($node, $last_position = 0) {
 
       // Record that we've seen this log row.
       $last_lid = $entry->lid;
+    }
+
+    // Flush the last task
+    if ($in_task && !empty($task_details)) {
+      $recap = _hosting_task_recap($task_details);
+      $rows[] = '<details class="hosting-status-wrapper ' . _hosting_task_log_class($recap) . '">';
+      $rows[] = '<summary>' . $task_label . '<div style="float: right;">' . $recap . '</div></summary>';
+      $rows[] = '<div class="hosting-task-log-details">';
+      foreach ($task_details as $task_msg) {
+        $rows[] = '<div class="hosting-status ' . _hosting_task_log_class($task_msg) . '">' . $task_msg . '</div>';
+      }
+      $rows[] = '</div>';
+      $rows[] = '</details>';
     }
 
     $html = '<div id="hosting-task-log">' . implode('', $rows) . '</div>';
