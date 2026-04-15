@@ -1421,6 +1421,9 @@ function _hosting_task_recap($tasks) {
     elseif (preg_match('/ERROR/', $task)) {
       $types['ERROR']++;
     }
+    elseif (preg_match('/fatal/', $task)) {
+      $types['ERROR']++;
+    }
   }
   $flatten = [];
   foreach ($types as $type => $count) {
@@ -1459,6 +1462,7 @@ function _hosting_task_log_class($type) {
       $type = 'warning';
       break;
     case 'failed':
+    case 'fatal':
     case 'error':
       $type = 'error';
       break;
