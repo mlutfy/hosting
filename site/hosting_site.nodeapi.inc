@@ -38,11 +38,19 @@ function hosting_site_view($node, $view_mode, $langcode = NULL) {
     );
   }
 
+  $status_extra_info = '';
+
   if ($node->nid) {
+    if ($node->site_status == HOSTING_SITE_DISABLED) {
+      $status_extra_info = ' on ' . db_query("SELECT FROM_UNIXTIME(executed) FROM hosting_task WHERE rid = :nid AND task_type = :task_type ORDER BY executed DESC LIMIT 1", [':nid' => $node->nid, ':task_type' => 'disable'])->fetchField();
+    }
+    elseif ($node->site_status == HOSTING_SITE_DELETED) {
+      $status_extra_info = ' on ' . db_query("SELECT FROM_UNIXTIME(executed) FROM hosting_task WHERE rid = :nid AND task_type = :task_type ORDER BY executed DESC LIMIT 1", [':nid' => $node->nid, ':task_type' => 'delete'])->fetchField();
+    }
     $node->content['info']['status'] = array(
       '#type' => 'item',
       '#title' => t('Status'),
-      '#markup' => _hosting_site_status($node),
+      '#markup' => _hosting_site_status($node) . $status_extra_info,
       '#weight' => -20,
     );
   }
