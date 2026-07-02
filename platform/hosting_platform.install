@@ -33,28 +33,33 @@ function hosting_platform_install() {
  * Implements hook_schema().
  */
 function hosting_platform_schema() {
-  $schema['hosting_platform'] = array(
-    'fields' => array(
-      'vid' => array(
+  $schema['hosting_platform'] = [
+    'fields' => [
+      'vid' => [
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-      ),
-      'nid' => array(
+      ],
+      'nid' => [
         'type' => 'int',
         'unsigned' => TRUE,
         'not null' => TRUE,
         'default' => 0,
-      ),
-      'publish_path' => array(
+      ],
+      'publish_path' => [
         'type' => 'text',
-        'size' => 'big',
+        'size' => 'normal',
         'not null' => FALSE,
-      ),
+      ],
       'software' => [
         'type' => 'text',
-        'size' => 'big',
+        'size' => 'tiny',
+        'default' => NULL,
+      ],
+      'phpversion' => [
+        'type' => 'text',
+        'size' => 'tiny',
         'default' => NULL,
       ],
       'web_server' => [
@@ -80,17 +85,17 @@ function hosting_platform_schema() {
       ],
       'site_post_import_cmd' => [
         'type' => 'text',
-        'size' => 'big',
+        'size' => 'normal',
         'default' => NULL,
       ],
       'site_post_verify_cmd' => [
         'type' => 'text',
-        'size' => 'big',
+        'size' => 'normal',
         'default' => NULL,
       ],
-    ),
-    'primary key' => array('vid'),
-  );
+    ],
+    'primary key' => ['vid'],
+  ];
 
   return $schema;
 }
@@ -144,4 +149,17 @@ function hosting_platform_update_7501() {
  */
 function hosting_platform_update_1000() {
   config_install_default_config('hosting_platform', 'views.view.hosting_platform_list');
+}
+
+/**
+ * Add the phpversion field
+ */
+function hosting_platform_update_1001() {
+  if (!db_field_exists('hosting_platform', 'phpversion')) {
+    db_add_field('hosting_platform', 'phpversion', [
+      'type' => 'text',
+      'size' => 'tiny',
+      'default' => NULL,
+    ]);
+  }
 }
