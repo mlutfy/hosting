@@ -473,7 +473,7 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
       'aliases' => $aliases,
       'aliases_redirection' => $aliases_redirection,
       // We use the CiviCRM values (and capitalisation)
-      'site_environment' => $node->environment === 1 ? 'Production' : 'Development',
+      'site_environment' => $node->environment == 1 ? 'Production' : 'Development',
       'site_shortname' => $shortname,
       'site_root' => $site_root,
       'site_path' => $site_root . '/sites/' . $node->title,
