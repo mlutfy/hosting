@@ -53,6 +53,8 @@ function hosting_http_basic_auth_update($node) {
       'whitelist' => $node->http_basic_auth_whitelist,
     ))
     ->execute();
+  // FIXME: this should not be necessary, but running into weird issues
+  backdrop_flush_all_caches();
 }
 
 /**
