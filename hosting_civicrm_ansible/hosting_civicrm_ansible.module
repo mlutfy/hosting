@@ -493,7 +493,7 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
       'cms_cron_interval' => $node->cron_interval ?: 0,
       // hosting_http_basic_auth
       'http_basic_auth_username' => $node->http_basic_auth_username ?: '',
-      'http_basic_auth_password' => !empty($node->http_basic_auth_password) ? hash('sha256', $node->http_basic_auth_password) : '',
+      'http_basic_auth_password' => $node->http_basic_auth_password ?: '',
       'http_basic_auth_message' => $node->http_basic_auth_message ?: '',
       'http_basic_auth_whitelist' => !empty($node->http_basic_auth_whitelist) ? explode(' ', $node->http_basic_auth_whitelist) : [],
       // Compatibility with hosting_wordpress
