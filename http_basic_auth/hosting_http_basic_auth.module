@@ -40,30 +40,33 @@ function hosting_http_basic_auth_form_alter(&$form, $form_state, $form_id) {
 }
 
 /**
- * Either inserts or updates an auth record for a node.
+ * Either inserts or updates the auth record for a node.
  */
-function hosting_http_basic_auth_update($node) {
+function _hosting_http_basic_auth_save($node) {
   db_merge('hosting_http_basic_auth')
-    ->key(array('vid' => $node->vid))
+    ->key(array('nid' => $node->nid))
     ->fields(array(
-      'nid' => $node->nid,
       'username' => $node->http_basic_auth_username,
-      'password' => $node->http_basic_auth_password,
-      'message' => $node->http_basic_auth_message,
-      'whitelist' => $node->http_basic_auth_whitelist,
+      'password' => isset($node->http_basic_auth_password) ? $node->http_basic_auth_password : '',
+      'message' => isset($node->http_basic_auth_message) ? $node->http_basic_auth_message : '',
+      'whitelist' => isset($node->http_basic_auth_whitelist) ? $node->http_basic_auth_whitelist : '',
     ))
     ->execute();
-  // FIXME: this should not be necessary, but running into weird issues
-  backdrop_flush_all_caches();
+
+  // Our values are attached to the node in hook_node_load(), so a node object
+  // cached before this save would still carry the old credentials.
+  entity_get_controller('node')->resetCache(array($node->nid));
 }
 
 /**
- * Deletes an auth record for a node.
+ * Deletes the auth record for a node.
  */
-function hosting_http_basic_auth_delete($node) {
+function _hosting_http_basic_auth_delete($node) {
   db_delete('hosting_http_basic_auth')
     ->condition('nid', $node->nid)
     ->execute();
+
+  entity_get_controller('node')->resetCache(array($node->nid));
 }
 
 /**
@@ -71,19 +74,7 @@ function hosting_http_basic_auth_delete($node) {
  */
 function hosting_http_basic_auth_node_insert($node) {
   if ($node->type == 'site' && !empty($node->http_basic_auth_username)) {
-    if (!isset($node->http_basic_auth_whitelist)) {
-      $node->http_basic_auth_whitelist = '';
-    }
-    $id = db_insert('hosting_http_basic_auth')
-    ->fields(array(
-      'vid' => $node->vid,
-      'nid' => $node->nid,
-      'username' => $node->http_basic_auth_username,
-      'password' => $node->http_basic_auth_password,
-      'message' => $node->http_basic_auth_message,
-      'whitelist' => $node->http_basic_auth_whitelist,
-    ))
-    ->execute();
+    _hosting_http_basic_auth_save($node);
   }
 }
 
@@ -91,21 +82,28 @@ function hosting_http_basic_auth_node_insert($node) {
  * Implements hook_node_update().
  */
 function hosting_http_basic_auth_node_update($node) {
-  if ($node->type == 'site') {
-    if (!isset($node->http_basic_auth_whitelist)) {
-      $node->http_basic_auth_whitelist = '';
-    }
+  if ($node->type != 'site') {
+    return;
+  }
 
-    $original = $node->original;
-    // Compare old values with new.
-    // If we had old values and the new are empty - we are deleting the auth.
-    if(!empty($original->http_basic_auth_username) && empty($node->http_basic_auth_username)){
-      hosting_http_basic_auth_delete($node);
+  // Only act when the save actually carried our fields. Site nodes are saved
+  // all the time by task callbacks, migrations and feeds, on node objects that
+  // never went through hook_node_load() - treating those as "the user cleared
+  // the credentials" would delete them. A node loaded normally always has the
+  // properties set (see hook_node_load()), and the site form always submits
+  // them, so an empty string here really is an explicit clear.
+  if (!isset($node->http_basic_auth_username)) {
+    return;
+  }
+
+  if ($node->http_basic_auth_username === '') {
+    // Nothing to remove on the many site saves that never had credentials.
+    if (!empty($node->original->http_basic_auth_username)) {
+      _hosting_http_basic_auth_delete($node);
     }
-    // If the new values aren't empty, we will update accordingly.
-    elseif(!empty($node->http_basic_auth_username)){
-      hosting_http_basic_auth_update($node);
-    }
+  }
+  else {
+    _hosting_http_basic_auth_save($node);
   }
 }
 
@@ -114,7 +112,7 @@ function hosting_http_basic_auth_node_update($node) {
  */
 function hosting_http_basic_auth_node_delete($node) {
   if ($node->type == 'site') {
-    hosting_http_basic_auth_delete($node);
+    _hosting_http_basic_auth_delete($node);
   }
 }
 
@@ -138,11 +136,17 @@ function hosting_http_basic_auth_node_validate($node) {
 function hosting_http_basic_auth_node_load($nodes, $types) {
   foreach ($nodes as $nid => $node) {
     if ($node->type == 'site') {
-      $additions = db_query("SELECT username AS http_basic_auth_username, password AS http_basic_auth_password, message AS http_basic_auth_message, whitelist AS http_basic_auth_whitelist FROM {hosting_http_basic_auth} WHERE vid = :vid", array(':vid' => $node->vid))->fetchAssoc();
-      if (!empty($additions)) {
-        foreach ($additions as $key => $value) {
-          $nodes[$nid]->$key = $value;
-        }
+      $additions = db_query("SELECT username AS http_basic_auth_username, password AS http_basic_auth_password, message AS http_basic_auth_message, whitelist AS http_basic_auth_whitelist FROM {hosting_http_basic_auth} WHERE nid = :nid", array(':nid' => $node->nid))->fetchAssoc();
+      if (empty($additions)) {
+        $additions = array(
+          'http_basic_auth_username' => '',
+          'http_basic_auth_password' => '',
+          'http_basic_auth_message' => '',
+          'http_basic_auth_whitelist' => '',
+        );
+      }
+      foreach ($additions as $key => $value) {
+        $nodes[$nid]->$key = $value;
       }
     }
   }

@@ -11,12 +11,8 @@
  */
 function hosting_http_basic_auth_schema() {
   $schema['hosting_http_basic_auth'] = [
+    'description' => 'HTTP basic authentication credentials, one row per site node.',
     'fields' => [
-      'vid' => [
-        'type' => 'int',
-        'not null' => TRUE,
-        'default' => 0,
-      ],
       'nid' => [
         'type' => 'int',
         'unsigned' => TRUE,
@@ -27,25 +23,95 @@ function hosting_http_basic_auth_schema() {
         'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
+        'default' => '',
       ],
       'password' => [
         'type' => 'varchar',
         'length' => 128,
         'not null' => TRUE,
+        'default' => '',
       ],
       'whitelist' => [
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
+        'default' => '',
       ],
       'message' => [
         'type' => 'text',
-        'not null' => TRUE,
+        'not null' => FALSE,
       ],
     ],
-    'indexes' => [
-      'vid' => ['vid'],
-    ],
+    // Keyed on nid, not vid: these credentials are not revision data, and
+    // keying on vid meant that any site node revision saved without the
+    // http_basic_auth_* properties lost them.
+    'primary key' => ['nid'],
   ];
   return $schema;
+}
+
+/**
+ * Key hosting_http_basic_auth on nid instead of vid.
+ */
+function hosting_http_basic_auth_update_1000() {
+  // Keep only the most recent revision's row for each site, otherwise the
+  // primary key cannot be added.
+  $result = db_query('SELECT nid, MAX(vid) AS vid FROM {hosting_http_basic_auth} GROUP BY nid');
+
+  foreach ($result as $row) {
+    db_delete('hosting_http_basic_auth')
+      ->condition('nid', $row->nid)
+      ->condition('vid', $row->vid, '<>')
+      ->execute();
+  }
+
+  // Rows for sites that no longer exist, or that never had a nid recorded.
+  db_delete('hosting_http_basic_auth')
+    ->condition('nid', 0)
+    ->execute();
+
+  db_drop_index('hosting_http_basic_auth', 'vid');
+  db_drop_field('hosting_http_basic_auth', 'vid');
+
+  // The old schema had no key at all, so duplicates on nid were possible even
+  // within a single vid. De-duplicate before adding the primary key.
+  $duplicates = db_query('SELECT nid, COUNT(*) AS total FROM {hosting_http_basic_auth} GROUP BY nid HAVING COUNT(*) > 1');
+
+  foreach ($duplicates as $duplicate) {
+    $keep = db_query_range('SELECT username, password, whitelist, message FROM {hosting_http_basic_auth} WHERE nid = :nid', 0, 1, [':nid' => $duplicate->nid])->fetchAssoc();
+    db_delete('hosting_http_basic_auth')
+      ->condition('nid', $duplicate->nid)
+      ->execute();
+    $keep['nid'] = $duplicate->nid;
+    db_insert('hosting_http_basic_auth')
+      ->fields($keep)
+      ->execute();
+  }
+
+  db_add_primary_key('hosting_http_basic_auth', ['nid']);
+
+  // 'message' was NOT NULL without a default, which made programmatic site
+  // saves fail on strict SQL modes.
+  db_change_field('hosting_http_basic_auth', 'message', 'message', [
+    'type' => 'text',
+    'not null' => FALSE,
+  ]);
+
+  foreach (['username', 'password'] as $field) {
+    db_change_field('hosting_http_basic_auth', $field, $field, [
+      'type' => 'varchar',
+      'length' => 128,
+      'not null' => TRUE,
+      'default' => '',
+    ]);
+  }
+
+  db_change_field('hosting_http_basic_auth', 'whitelist', 'whitelist', [
+    'type' => 'varchar',
+    'length' => 255,
+    'not null' => TRUE,
+    'default' => '',
+  ]);
+
+  return t('The HTTP basic authentication credentials are now stored per site, rather than per site revision.');
 }
