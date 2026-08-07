@@ -354,6 +354,10 @@ function _hosting_ansible_cron_last_output($node) {
 function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
   if (function_exists('backdrop_page_is_cacheable')) {
     backdrop_page_is_cacheable(FALSE);
+    // Prevent nginx from caching the page
+    backdrop_add_http_header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    backdrop_add_http_header('Pragma', 'no-cache');
+    backdrop_add_http_header('Expires', '0');
   }
 
   $inventory->all = [
@@ -466,13 +470,14 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
       // The 'cms' is only for backwards compatibility
       'cms' => 'drupal',
       'software' => $node->software ?? '',
+      'phpversion' => $node->phpversion ?? '',
       'civicrm_uf' => $civicrm_uf,
       'profile' => $profile,
       'language' => $node->site_language,
       'aliases' => $aliases,
       'aliases_redirection' => $aliases_redirection,
       // We use the CiviCRM values (and capitalisation)
-      'site_environment' => $node->environment === 1 ? 'Production' : 'Development',
+      'site_environment' => $node->environment == 1 ? 'Production' : 'Development',
       'site_shortname' => $shortname,
       'site_root' => $site_root,
       'site_path' => $site_root . '/sites/' . $node->title,
@@ -492,7 +497,7 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
       'cms_cron_interval' => $node->cron_interval ?: 0,
       // hosting_http_basic_auth
       'http_basic_auth_username' => $node->http_basic_auth_username ?: '',
-      'http_basic_auth_password' => !empty($node->http_basic_auth_password) ? hash('sha256', $node->http_basic_auth_password) : '',
+      'http_basic_auth_password' => $node->http_basic_auth_password ?: '',
       'http_basic_auth_message' => $node->http_basic_auth_message ?: '',
       'http_basic_auth_whitelist' => !empty($node->http_basic_auth_whitelist) ? explode(' ', $node->http_basic_auth_whitelist) : [],
       // Compatibility with hosting_wordpress
