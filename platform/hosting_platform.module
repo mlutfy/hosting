@@ -117,7 +117,7 @@ function hosting_platform_edit_form_on_site_page_access($op, $site) {
  * Implements hook_hosting_tasks().
  */
 function hosting_platform_hosting_tasks() {
-  $tasks = array();
+  $tasks = [];
   $tasks['platform']['verify'] = array(
     'title' => t('Verify Platform'),
     'description' => t('Verify that the platform is correctly installed and working.'),
@@ -147,7 +147,12 @@ function hosting_platform_hosting_tasks() {
         Are you really sure you want to unlock this platform?'),
     'weight' => 10,
   );
-
+  $tasks['platform']['upgrade'] = [
+    'title' => t('Update Platform'),
+    'description' => t('Running a Git pull will run database upgrades if necessary. Are you sure?'),
+    'weight' => 12,
+    'dialog' => TRUE,
+  ];
   return $tasks;
 }
 
@@ -171,6 +176,9 @@ function hosting_platform_permission() {
     ),
     'delete platform' => array(
       'title' => t('delete platform'),
+    ),
+    'upgrade platform' => array(
+      'title' => t('upgrade platform'),
     ),
     'view locked platforms' => array(
       'title' => t('view locked platforms'),
@@ -244,6 +252,15 @@ function hosting_platform_unlock_action($node) {
  */
 function hosting_platform_delete_action($node) {
   hosting_add_task($node->nid, 'delete');
+}
+
+/**
+ * Callback for platform upgrade action.
+ *
+ * @see: hosting_task_action_info().
+ */
+function hosting_platform_upgrade_action($node) {
+  hosting_add_task($node->nid, 'upgrade');
 }
 
 /**

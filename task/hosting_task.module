@@ -269,8 +269,8 @@ function hosting_task_cancel_access($node) {
 /**
  * Task access controls.
  *
- * This function defines which tasks should be showed to the user but
- * especially which will be accessible to him, in the permissions system.
+ * Defines which tasks should be visible to the user depending on the
+ * site/platform/server status.
  *
  * @arg $node object
  *   the node object we're trying to access
@@ -327,15 +327,13 @@ function hosting_task_menu_access($node, $task) {
         return FALSE;
       }
       // If the platform's been locked, we can unlock it, delete, batch migrate existing sites or verify.
-      if ($node->platform_status == HOSTING_PLATFORM_LOCKED) {
-        $platform_tasks = array('verify', 'unlock', 'delete', 'migrate');
-        return (in_array($task, $platform_tasks));
+      if ($node->platform_status == HOSTING_PLATFORM_LOCKED && $task == 'lock') {
+        return FALSE;
       }
-      else {
-        // If the platform's unlocked, we can lock it, delete it or batch migrate sites
-        $platform_tasks = array('verify', 'lock', 'delete', 'migrate');
+      if ($node->platform_status != HOSTING_PLATFORM_LOCKED && $task == 'unlock') {
+        return FALSE;
       }
-      return (in_array($task, $platform_tasks));
+      return TRUE;
     }
     if ($node->type === 'server') {
       // If the user can't edit this node, he can't create tasks on it.
