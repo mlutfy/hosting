@@ -19,8 +19,6 @@ function hosting_usage_menu() {
  * Page callback to display site usage stats.
  */
 function hosting_usage_page() {
-  $rows = [];
-
   $header = [
     'site' => ['data' => t('Site')],
     'DirSize' => ['data' => t('Files Usage')],
@@ -44,10 +42,33 @@ function hosting_usage_page() {
     return t('The usage.log is not available. Please check that the weekly.sh script is running.');
   }
 
+  $rows = hosting_usage_get_data();
+
+  // Add the creation date
+  foreach ($rows as $site => $data) {
+    $node = hosting_get_site_by_url($site);
+    $rows[$site]['created'] = date('Y-m-d', $node->created);
+  }
+
+  $render['usage'] = [
+    '#theme' => 'table',
+    '#header' => $header,
+    '#rows' => $rows,
+  ];
+
+  return $render;
+}
+
+/**
+ * Load /var/log/aegir/usage.log, if it exists, so that stats can be displayed
+ * in the inventory (picked up by telemetrie via hosting_civicrm_ansible).
+ */
+function hosting_usage_get_data() {
   $handle = fopen('/var/log/aegir/usage.log', 'r');
+  $rows = [];
 
   if ($handle === FALSE) {
-    return t('The usage.log cannot be read. Please check file permissions on the server.');
+    throw new Exception(t('The usage.log cannot be read. Please check file permissions on the server.'));
   }
 
   while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
@@ -71,17 +92,5 @@ function hosting_usage_page() {
     $rows[$site][$col] = $val;
   }
 
-  // Add the creation date
-  foreach ($rows as $site => $data) {
-    $node = hosting_get_site_by_url($site);
-    $rows[$site]['created'] = date('Y-m-d', $node->created);
-  }
-
-  $render['usage'] = [
-    '#theme' => 'table',
-    '#header' => $header,
-    '#rows' => $rows,
-  ];
-
-  return $render;
+  return $rows;
 }

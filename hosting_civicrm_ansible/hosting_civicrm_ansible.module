@@ -416,6 +416,8 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
   // Set a global for most global confs (we also set it for each site)
   $inventory->all['vars']['aegir_managed'] = 'Managed by Aegir on ' . date('Y-m-d H:i:s');
 
+  $usage_data = function_exists('hosting_usage_get_data') ? hosting_usage_get_data() : NULL;
+
   foreach ($site_nodes as $node) {
     // Remove the top-level domain name from the shortname
     $shortname = hosting_civicrm_ansible_inventory_shortname($node->title);
@@ -510,6 +512,9 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
       'last_login' => $last_login,
       // Custom comment added in some templates
       'aegir_managed' => 'Managed by Aegir for ' . $node->title . ' on ' . date('Y-m-d H:i:s'),
+      // Usage data
+      'filesize' => $usage_data[$node->title]['DirSize'] ?? 0,
+      'dbsize' => $usage_data[$node->title]['DatSize'] ?? 0,
     ];
 
     // Re-use the provision_symbiotic_is_dev_site() from provision_symbiotic, if available
