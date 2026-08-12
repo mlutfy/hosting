@@ -672,6 +672,56 @@ function hosting_civicrm_ansible_get_all_platforms() {
     $resource = preg_replace('#/web$#', '', $resource);
     $resource = basename($resource);
 
+    // Detect the CMS and CRM version
+    $software_version = '';
+    $crm_version = '';
+    $crm_version_xml = '';
+
+    if ($record->software == 'WordPress') {
+      // Extract the WordPress version
+      $content = file_get_contents($record->publish_path . '/wp-includes/version.php');
+      if (preg_match('/\$wp_version\s*=\s*[\'"]([^\'"]+)[\'"]/', $content, $m)) {
+        // Ex: 7.0.2
+        $software_version = $m[1];
+      }
+      $crm_version_xml = 'wp-content/plugins/civicrm/civicrm/xml/version.xml';
+    }
+    if ($record->software == 'Drupal7') {
+      $content = file_get_contents($record->publish_path . '/includes/bootstrap.inc');
+      if (preg_match('/\bdefine\(\s*[\'"]VERSION[\'"]\s*,\s*[\'"]([^\'"]+)[\'"]/', $content, $m)) {
+        // Ex: 7.103
+        $software_version = $m[1];
+      }
+      $crm_version_xml = $record->publish_path . '/sites/all/modules/civicrm/xml/version.xml';
+    }
+    elseif (preg_match('/Drupal\d+/', $record->software)) {
+      // Extract the Drupal version
+      $content = file_get_contents($record->publish_path . 'core/lib/Drupal.php');
+      if (preg_match('/\bconst\s+VERSION\s*=\s*[\'"]([^\'"]+)[\'"]/', $content, $m)) {
+        // Ex: 11.1.5
+        $software_version = $m[1];
+      }
+      if ($record->software == 'Drupal9') {
+        $crm_version_xml = $record->publish_path . '/vendor/civicrm/civicrm-core/xml/version.xml';
+      }
+      else {
+        $crm_version_xml = dirname($record->publish_path) . '/vendor/civicrm/civicrm-core/xml/version.xml';
+      }
+    }
+    elseif ($record->software == 'CiviCRM') {
+      $crm_version_xml = dirname($record->publish_path) . '/vendor/civicrm/civicrm-core/xml/version.xml';
+    }
+
+    // Extract the CiviCRM version
+    if ($crm_version_xml && file_exists($crm_version_xml)) {
+      $xml = simplexml_load_file($crm_version_xml);
+      $crm_version = $xml ? (string) $xml->version_no : null;
+
+      if ($record->software == 'CiviCRM') {
+        $software_version = $crm_version;
+      }
+    }
+
     $platforms[$record->nid] = [
       'shortname' => $resource,
       'nid' => $record->nid,
@@ -680,6 +730,8 @@ function hosting_civicrm_ansible_get_all_platforms() {
       'verified' => $record->verified,
       'status' => $record->status,
       'software' => $record->software ?? '',
+      'software_version' => $software_version,
+      'crm_version' => $software_version,
       'site_post_install_cmd' => $record->site_post_install_cmd ?? '',
       'site_post_import_cmd' => $record->site_post_import_cmd ?? '',
       'site_post_verify_cmd' => $record->site_post_verify_cmd ?? '',
