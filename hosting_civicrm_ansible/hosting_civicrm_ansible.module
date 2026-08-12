@@ -472,6 +472,8 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
       // The 'cms' is only for backwards compatibility
       'cms' => 'drupal',
       'software' => $node->software ?? '',
+      'software_version' => $platforms[$node->platform]['software_version'] ?? '',
+      'crm_version' => $platforms[$node->platform]['crm_version'] ?? '',
       'phpversion' => $node->phpversion ?? '',
       'civicrm_uf' => $civicrm_uf,
       'profile' => $profile,
