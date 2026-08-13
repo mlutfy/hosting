@@ -264,6 +264,18 @@ function hosting_site_maintenance() {
 }
 
 /**
+ * Disable the Entity Caching for nodes because it is causing
+ * weird bugs when sites run Verify. Ex: http basic auth settings are lost.
+ *
+ * Implements hook_entity_info_alter().
+ */
+function hosting_entity_info_alter(&$entity_info) {
+  if (isset($entity_info['node'])) {
+    $entity_info['node']['entity cache'] = FALSE;
+  }
+}
+
+/**
  * Implements hook_node_delete().
  *
  * @see hook_nodeapi_TYPE_OP()
