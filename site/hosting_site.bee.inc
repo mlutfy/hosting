@@ -95,9 +95,11 @@ function bee_hosting_site_task($arguments, $options) {
 function bee_hosting_site_update_status($arguments, $options) {
   if (isset($options['status'])) {
     $node = node_load($arguments['nid']);
-    $node->site_status = $options['status'];
-    $node->no_verify = TRUE;
-    node_save($node);
+    if ($node->site_status != $options['status']) {
+      $node->site_status = $options['status'];
+      $node->no_verify = TRUE;
+      node_save($node);
+    }
   }
 }
 
