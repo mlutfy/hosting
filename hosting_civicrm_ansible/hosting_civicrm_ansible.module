@@ -686,7 +686,7 @@ function hosting_civicrm_ansible_get_all_platforms() {
         // Ex: 7.0.2
         $software_version = $m[1];
       }
-      $crm_version_xml = 'wp-content/plugins/civicrm/civicrm/xml/version.xml';
+      $crm_version_xml = $record->publish_path . '/wp-content/plugins/civicrm/civicrm/xml/version.xml';
     }
     if ($record->software == 'Drupal7') {
       $content = file_get_contents($record->publish_path . '/includes/bootstrap.inc');
