@@ -698,7 +698,7 @@ function hosting_civicrm_ansible_get_all_platforms() {
     }
     elseif (preg_match('/Drupal\d+/', $record->software)) {
       // Extract the Drupal version
-      $content = file_get_contents($record->publish_path . 'core/lib/Drupal.php');
+      $content = file_get_contents($record->publish_path . '/core/lib/Drupal.php');
       if (preg_match('/\bconst\s+VERSION\s*=\s*[\'"]([^\'"]+)[\'"]/', $content, $m)) {
         // Ex: 11.1.5
         $software_version = $m[1];
