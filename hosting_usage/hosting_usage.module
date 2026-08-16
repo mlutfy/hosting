@@ -71,7 +71,7 @@ function hosting_usage_get_data() {
     throw new Exception(t('The usage.log cannot be read. Please check file permissions on the server.'));
   }
 
-  while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
+  while (($data = fgetcsv($handle, NULL, ',')) !== FALSE) {
     if (count($data) < 2) {
       continue;
     }
