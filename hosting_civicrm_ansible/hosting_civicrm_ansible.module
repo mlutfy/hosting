@@ -449,6 +449,8 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
 
     // Set the UF for CiviCRM
     $civicrm_uf_map = [
+      'Drupal12' => 'Drupal8',
+      'Drupal11' => 'Drupal8',
       'Drupal10' => 'Drupal8',
       'Drupal9' => 'Drupal8',
       'Drupal7' => 'Drupal',
