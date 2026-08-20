@@ -476,7 +476,7 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
       'software' => $node->software ?? '',
       'software_version' => $platforms[$node->platform]['software_version'] ?? '',
       'crm_version' => $platforms[$node->platform]['crm_version'] ?? '',
-      'phpversion' => $node->phpversion ?? '',
+      'phpversion' => $node->phpversion ?? $platforms[$node->platform]['phpversion'] ?? $phpversion,
       'civicrm_uf' => $civicrm_uf,
       'profile' => $profile,
       'language' => $node->site_language,
