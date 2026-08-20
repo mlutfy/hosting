@@ -736,6 +736,7 @@ function hosting_civicrm_ansible_get_all_platforms() {
       'software' => $record->software ?? '',
       'software_version' => $software_version,
       'crm_version' => $crm_version,
+      'phpversion' => $record->phpversion ?? '',
       'site_post_install_cmd' => $record->site_post_install_cmd ?? '',
       'site_post_import_cmd' => $record->site_post_import_cmd ?? '',
       'site_post_verify_cmd' => $record->site_post_verify_cmd ?? '',
