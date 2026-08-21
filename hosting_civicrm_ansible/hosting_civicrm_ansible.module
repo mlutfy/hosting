@@ -409,9 +409,8 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
   $inventory->all['vars']['aegir_salt'] = $salt;
 
   // Save the PHP version, for when it is necessary in nginx configurations
-  $phpversion = phpversion();
-  $parts = explode('.', $phpversion);
-  $inventory->all['vars']['phpversion'] = $parts[0] . '.' . $parts[1];
+  $phpversion = hosting_civicrm_ansible_get_default_phpversion();
+  $inventory->all['vars']['phpversion'] = $phpversion;
 
   // Set a global for most global confs (we also set it for each site)
   $inventory->all['vars']['aegir_managed'] = 'Managed by Aegir on ' . date('Y-m-d H:i:s');
@@ -726,6 +725,8 @@ function hosting_civicrm_ansible_get_all_platforms() {
       }
     }
 
+    $phpversion = hosting_civicrm_ansible_get_default_phpversion();
+
     $platforms[$record->nid] = [
       'shortname' => $resource,
       'nid' => $record->nid,
@@ -736,7 +737,7 @@ function hosting_civicrm_ansible_get_all_platforms() {
       'software' => $record->software ?? '',
       'software_version' => $software_version,
       'crm_version' => $crm_version,
-      'phpversion' => $record->phpversion ?? '',
+      'phpversion' => $record->phpversion ?? $phpversion,
       'site_post_install_cmd' => $record->site_post_install_cmd ?? '',
       'site_post_import_cmd' => $record->site_post_import_cmd ?? '',
       'site_post_verify_cmd' => $record->site_post_verify_cmd ?? '',
@@ -920,4 +921,15 @@ function hosting_civicrm_ansible_get_arguments($task_nid) {
   }
 
   return $args;
+}
+
+/**
+ * Returns the default PHP major version
+ * Assumes that system/aegir tasks are running with the default
+ * TODO: add phpversion setting on the "server" nodes?
+ */
+function hosting_civicrm_ansible_get_default_phpversion() {
+  $phpversion = phpversion();
+  $parts = explode('.', $phpversion);
+  return $parts[0] . '.' . $parts[1];
 }
