@@ -10,6 +10,11 @@ function hosting_server_bee_command() {
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
     'callback' => 'bee_hosting_server_upgrade_platforms',
   ];
+  $items['hosting-server-verify'] = [
+    'description' => 'Queue a server verify task',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_server_verify',
+  ];
   return $items;
 }
 
@@ -34,5 +39,18 @@ function bee_hosting_server_upgrade_platforms($arguments, $options) {
       continue;
     }
     echo t('Queued an upgrade task for: @title (@nid)', ['@title' => $platform->title, '@nid' => $platform->nid]) . "\n";
+  }
+}
+
+/**
+ * Queue a 'verify' task for the server.
+ * Called from Ansible
+ */
+function bee_hosting_server_verify($arguments, $options) {
+  $servers = db_query('SELECT nid FROM hosting_server WHERE status = :status', [
+    ':status' => HOSTING_SERVER_ENABLED,
+  ]);
+  foreach ($servers as $server) {
+    $task = hosting_add_task($server->nid, 'verify');
   }
 }

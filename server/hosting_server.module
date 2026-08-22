@@ -151,6 +151,11 @@ function hosting_server_hosting_tasks() {
     'title' => t('Delete Server'),
     'description' => t('Delete the server.'),
   );
+  $tasks['server']['upgrade-aegir'] = [
+    'title' => t('Upgrade Aegir'),
+    'description' => t('Upgrade Aegir playbooks and web interface to the latest versions'),
+    'dialog' => TRUE,
+  ];
   $tasks['server']['upgrade-platforms'] = [
     'title' => t('Upgrade Platforms'),
     'description' => t('Upgrade all platforms on this server (includes running DB upgrades on all sites).'),
