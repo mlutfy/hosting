@@ -417,7 +417,7 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
 
   // This is sometimes useful, for example, for server upgrades
   global $base_url;
-  $inventory->all['vars']['aegir_hostmaster'] = preg_replace('#^https?://#', '', $base_url);
+  $inventory->all['vars']['aegir_frontend'] = preg_replace('#^https?://#', '', $base_url);
 
   $usage_stats = function_exists('hosting_usage_get_data') ? hosting_usage_get_data() : NULL;
 
