@@ -415,6 +415,10 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
   // Set a global for most global confs (we also set it for each site)
   $inventory->all['vars']['aegir_managed'] = 'Managed by Aegir on ' . date('Y-m-d H:i:s');
 
+  // This is sometimes useful, for example, for server upgrades
+  global $base_url;
+  $inventory->all['vars']['aegir_hostmaster'] = preg_replace('#^https?://#', '', $base_url);
+
   $usage_stats = function_exists('hosting_usage_get_data') ? hosting_usage_get_data() : NULL;
 
   foreach ($site_nodes as $node) {
