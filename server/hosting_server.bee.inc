@@ -10,6 +10,11 @@ function hosting_server_bee_command() {
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
     'callback' => 'bee_hosting_server_upgrade_platforms',
   ];
+  $items['hosting-server-upgrade-aegir'] = [
+    'description' => 'Queue a server upgrade-aegir task',
+    'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
+    'callback' => 'bee_hosting_server_upgrade_aegir',
+  ];
   $items['hosting-server-verify'] = [
     'description' => 'Queue a server verify task',
     'bootstrap' => BACKDROP_BOOTSTRAP_FULL,
@@ -39,6 +44,19 @@ function bee_hosting_server_upgrade_platforms($arguments, $options) {
       continue;
     }
     echo t('Queued an upgrade task for: @title (@nid)', ['@title' => $platform->title, '@nid' => $platform->nid]) . "\n";
+  }
+}
+
+/**
+ * Queue an 'upgrade-aegir' task for all servers
+ * Called from Ansible (telemetrie)
+ */
+function bee_hosting_server_upgrade_aegir($arguments, $options) {
+  $servers = db_query('SELECT nid FROM hosting_server WHERE status = :status', [
+    ':status' => HOSTING_SERVER_ENABLED,
+  ]);
+  foreach ($servers as $server) {
+    $task = hosting_add_task($server->nid, 'upgrade-aegir');
   }
 }
 
