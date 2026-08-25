@@ -20,7 +20,7 @@ function hosting_server_bee_command() {
         'value' => bt('seconds'),
       ],
       'interval' => [
-        'description' => bt('Number of seconds between two polls of the task queue (default: 10).'),
+        'description' => bt('Number of seconds between two polls of the task queue (default: 5).'),
         'value' => bt('seconds'),
       ],
       'json' => [
@@ -84,7 +84,7 @@ function bee_hosting_server_upgrade_platforms($arguments, $options) {
  */
 function bee_hosting_server_upgrade_aegir($arguments, $options) {
   $timeout = $options['timeout'] ?? 3600;
-  $interval = $options['interval'] ?? 10;
+  $interval = $options['interval'] ?? 5;
   $interval = max(1, $interval);
   // Output to stdout by default
   $json_file = $options['json'] ?? '-';
@@ -366,10 +366,9 @@ function _hosting_server_upgrade_aegir_context($rid) {
  */
 function _hosting_server_upgrade_aegir_messages($vid) {
   $result = db_query('SELECT type, message, error, timestamp FROM {hosting_task_log}
-    WHERE vid = :vid AND type IN (:types)
+    WHERE vid = :vid
     ORDER BY lid ASC', [
     ':vid' => $vid,
-    ':types' => ['error', 'warning'],
   ]);
 
   $messages = [];
