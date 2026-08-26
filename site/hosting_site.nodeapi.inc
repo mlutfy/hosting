@@ -432,6 +432,7 @@ function hosting_site_update(&$node) {
 function hosting_site_load($nodes) {
   // Workaround for some glitchy upgrades in hosting_civicrm_ansible
   static $software = NULL;
+  static $phpversion = NULL;
   if ($software === NULL) {
     $software = db_field_exists('hosting_platform', 'software') ? ', p.software' : '';
     $phpversion = db_field_exists('hosting_platform', 'phpversion') ? ', p.phpversion' : '';
