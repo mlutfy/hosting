@@ -928,12 +928,16 @@ function hosting_civicrm_ansible_get_arguments($task_nid) {
 }
 
 /**
- * Returns the default PHP major version
- * Assumes that system/aegir tasks are running with the default
- * TODO: add phpversion setting on the "server" nodes?
+ * Returns the default PHP major version using a shell command
+ * so that we get the default system version, not the version
+ * we are running on.
  */
 function hosting_civicrm_ansible_get_default_phpversion() {
-  $phpversion = phpversion();
-  $parts = explode('.', $phpversion);
-  return $parts[0] . '.' . $parts[1];
+  $cmd = 'php -r ' . escapeshellarg('echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;') . ' 2>/dev/null';
+  $version = trim((string) shell_exec($cmd));
+  if (!preg_match('/^\d+\.\d+$/', $version)) {
+    // php not found in PATH or command failed
+    $version = PHP_MAJOR_VERSION . '.' . PHP_MINOR_VERSION;
+  }
+  return $version;
 }
