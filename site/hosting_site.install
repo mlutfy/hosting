@@ -31,6 +31,74 @@ function hosting_site_install() {
 }
 
 /**
+ * Implements hook_enable().
+ *
+ * Adds the site list block to the "Bottom" region of the default layout, so
+ * that the list of hosted sites is visible on the front page.
+ */
+function hosting_site_enable() {
+  if (!defined('BACKDROP_ROOT')) {
+    return;
+  }
+  _hosting_site_layout_add_site_list_block();
+}
+
+/**
+ * Adds the hosting_site_list view block to a region of a layout.
+ *
+ * Called on install (hook_enable) and by the update hooks, so it must be
+ * idempotent: it does nothing if the block is already in the layout.
+ *
+ * @param string $layout_name
+ *   The machine name of the layout to modify, ex: 'default'.
+ * @param string $region
+ *   The name of the region within that layout, ex: 'bottom'.
+ *
+ * @return bool
+ *   TRUE if the block was added, FALSE if it was skipped.
+ */
+function _hosting_site_layout_add_site_list_block($layout_name = 'default', $region = 'bottom') {
+  if (!function_exists('layout_load') || !module_exists('views')) {
+    return FALSE;
+  }
+
+  // The block delta for a Views block is "viewname-displayid".
+  $delta = 'hosting_site_list-block_sites';
+
+  // The view is provided as default config by this module, so the cached list
+  // of blocks does not know about it yet when we are being installed.
+  views_invalidate_cache();
+  backdrop_static_reset('layout_get_block_info');
+
+  $layout = layout_load($layout_name);
+
+  if (empty($layout)) {
+    return FALSE;
+  }
+
+  // The layout template must actually provide the region we are aiming for,
+  // ex: if the site admin switched to a layout without a "bottom" region.
+  $template = layout_get_layout_template_info($layout->layout_template);
+
+  if (empty($template['regions'][$region])) {
+    return FALSE;
+  }
+
+  // Do not add the block twice, ex: if the module is disabled and re-enabled,
+  // or if the site admin moved the block to another region.
+  foreach ($layout->content as $block) {
+    if ($block->module == 'views' && $block->delta == $delta) {
+      return FALSE;
+    }
+  }
+
+  $layout->addBlock('views', $delta, $region);
+  $layout->save();
+
+  return TRUE;
+}
+
+/**
  * Implements hook_schema().
  */
 function hosting_site_schema() {
@@ -276,4 +344,11 @@ function hosting_site_update_7504() {
  */
 function hosting_site_update_1000() {
   config_install_default_config('hosting_site', 'views.view.hosting_site_list');
+}
+
+/**
+ * Add the site list block to the Bottom region of the default layout.
+ */
+function hosting_site_update_1001() {
+  _hosting_site_layout_add_site_list_block();
 }
