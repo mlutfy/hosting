@@ -33,8 +33,7 @@ function hosting_site_install() {
 /**
  * Implements hook_enable().
  *
- * Adds the site list block to the "Bottom" region of the default layout, so
- * that the list of hosted sites is visible on the front page.
+ * Adds a layout for platform nodes showing the list of sites on the platform.
  */
 function hosting_site_enable() {
   if (!defined('BACKDROP_ROOT')) {
@@ -44,53 +43,81 @@ function hosting_site_enable() {
 }
 
 /**
- * Adds the hosting_site_list view block to a region of a layout.
+ * Adds the hosting_site_list block to a layout limited to platform nodes.
+ *
+ * The block_sites display of the hosting_site_list view has a contextual filter
+ * on the platform, so the block lists the sites installed on the platform being
+ * viewed.
+ *
+ * The block cannot simply be added to the default layout with a "Content: Type"
+ * visibility condition: that condition requires a node context, and the default
+ * layout never has one, because it is loaded without its menu item (see
+ * layout_load_multiple_by_path()). Backdrop hides the condition in the UI for
+ * that reason. So we clone the default layout, restrict the clone to platform
+ * nodes and add the block to it. Backdrop falls back to the default layout for
+ * every other node.
  *
  * Called on install (hook_enable) and by the update hooks, so it must be
- * idempotent: it does nothing if the block is already in the layout.
+ * idempotent: it does nothing if the layout already exists.
  *
- * @param string $layout_name
- *   The machine name of the layout to modify, ex: 'default'.
  * @param string $region
- *   The name of the region within that layout, ex: 'bottom'.
+ *   The name of the region within the layout, ex: 'bottom'.
  *
  * @return bool
- *   TRUE if the block was added, FALSE if it was skipped.
+ *   TRUE if the layout was created, FALSE if it was skipped.
  */
-function _hosting_site_layout_add_site_list_block($layout_name = 'default', $region = 'bottom') {
+function _hosting_site_layout_add_site_list_block($region = 'bottom') {
   if (!function_exists('layout_load') || !module_exists('views')) {
     return FALSE;
   }
 
+  $layout_name = 'hosting_platform';
+
   // The block delta for a Views block is "viewname-displayid".
   $delta = 'hosting_site_list-block_sites';
+
+  // Do not re-create the layout, ex: if the module is disabled and re-enabled,
+  // or if the site admin deliberately removed the block from it.
+  $configs = layout_get_all_configs('layout');
+
+  if (isset($configs[$layout_name])) {
+    return FALSE;
+  }
 
   // The view is provided as default config by this module, so the cached list
   // of blocks does not know about it yet when we are being installed.
   views_invalidate_cache();
   backdrop_static_reset('layout_get_block_info');
 
-  $layout = layout_load($layout_name);
+  // Start from the default layout, so that platform nodes keep the header, the
+  // menus and the page content of every other page.
+  $default = layout_load('default');
 
-  if (empty($layout)) {
+  if (empty($default)) {
     return FALSE;
   }
 
   // The layout template must actually provide the region we are aiming for,
   // ex: if the site admin switched to a layout without a "bottom" region.
-  $template = layout_get_layout_template_info($layout->layout_template);
+  $template = layout_get_layout_template_info($default->layout_template);
 
   if (empty($template['regions'][$region])) {
     return FALSE;
   }
 
-  // Do not add the block twice, ex: if the module is disabled and re-enabled,
-  // or if the site admin moved the block to another region.
-  foreach ($layout->content as $block) {
-    if ($block->module == 'views' && $block->delta == $delta) {
-      return FALSE;
-    }
-  }
+  $layout = $default->getClone();
+
+  // The name must be set before the path: setPath() names the menu item after
+  // the layout.
+  $layout->name = $layout_name;
+  $layout->title = t('Platform');
+  $layout->setPath('node/%');
+
+  // Only use this layout for nodes of type 'platform'. The plugin name is built
+  // by layout_layout_access_info() as "<entity type>_<bundle key>".
+  $condition = layout_create_access('node_type');
+  $condition->settings['bundles'] = array('platform');
+  $layout->conditions[] = $condition;
 
   $layout->addBlock('views', $delta, $region);
   $layout->save();
@@ -347,7 +374,7 @@ function hosting_site_update_1000() {
 }
 
 /**
- * Add the site list block to the Bottom region of the default layout.
+ * Add a layout for platform nodes that shows the list of sites.
  */
 function hosting_site_update_1001() {
   _hosting_site_layout_add_site_list_block();
