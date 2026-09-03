@@ -105,6 +105,39 @@ function _hosting_site_layout_add_site_list_block($region = 'bottom') {
     return FALSE;
   }
 
+  // Workaround for Backdrop core bug:
+  // Layout::getClone() assumes that every block UUID listed in the layout's
+  // $positions also exists in its $content, and blindly dereferences
+  // $content[$uuid]. On sites whose default layout drifted out of sync, ex: a
+  // block that was removed from $content but left behind in $positions, that
+  // fails with an "Undefined array key <uuid>" error followed by a fatal error
+  // on a NULL block. Work on a copy with the stale positions dropped, so that
+  // an inconsistency in the default layout does not abort the update.
+  //
+  // The copy is shallow on purpose: only $positions is rewritten below, and
+  // getClone() replaces every block with a clone of its own, so the layout
+  // cached by layout_load() is left untouched.
+  $default = clone $default;
+  $positions = [];
+
+  foreach ($default->positions as $region_name => $uuids) {
+    $positions[$region_name] = array();
+
+    foreach ($uuids as $uuid) {
+      if (isset($default->content[$uuid]) && is_object($default->content[$uuid])) {
+        $positions[$region_name][] = $uuid;
+      }
+      else {
+        watchdog('hosting_site', 'Skipping block @uuid while copying the default layout: it is listed in the @region region, but the layout has no such block. The default layout should be repaired.', array(
+          '@uuid' => $uuid,
+          '@region' => $region_name,
+        ), WATCHDOG_WARNING);
+      }
+    }
+  }
+
+  $default->positions = $positions;
+
   $layout = $default->getClone();
 
   // The name must be set before the path: setPath() names the menu item after
@@ -118,6 +151,16 @@ function _hosting_site_layout_add_site_list_block($region = 'bottom') {
   $condition = layout_create_access('node_type');
   $condition->settings['bundles'] = array('platform');
   $layout->conditions[] = $condition;
+
+  // An earlier version of this function added the block to the default layout
+  // itself, so the copy we just made may already contain it.
+  foreach ($layout->content as $block) {
+    if ($block->module == 'views' && $block->delta == $delta) {
+      $layout->save();
+
+      return TRUE;
+    }
+  }
 
   $layout->addBlock('views', $delta, $region);
   $layout->save();
@@ -377,5 +420,9 @@ function hosting_site_update_1000() {
  * Add a layout for platform nodes that shows the list of sites.
  */
 function hosting_site_update_1001() {
-  _hosting_site_layout_add_site_list_block();
+  if (_hosting_site_layout_add_site_list_block()) {
+    return t('Added the "Platform" layout, which lists the sites installed on a platform.');
+  }
+
+  return t('Skipped the "Platform" layout: it already exists, or the site list block could not be placed. See the log for details.');
 }
