@@ -22,6 +22,22 @@ function hosting_civicrm_ansible_autoload_info() {
 }
 
 /**
+ * Implements hook_menu_site_status_alter().
+ */
+function hosting_civicrm_ansible_menu_site_status_alter(&$menu_site_status, $path) {
+  // Paths that should remain visible in maintenance mode.
+  // inventory must be accessible otherwise a failed BackdropCMS db update
+  // will make it impossible to run Ansible commands.
+  $allowed_paths = [
+    'inventory',
+  ];
+
+  if ($menu_site_status == MENU_SITE_OFFLINE && in_array($path, $allowed_paths)) {
+    $menu_site_status = MENU_SITE_ONLINE;
+  }
+}
+
+/**
  * Implements hook_node_load().
  */
 function hosting_civicrm_ansible_node_load($nodes, $types) {
