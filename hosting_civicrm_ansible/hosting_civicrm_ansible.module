@@ -57,6 +57,7 @@ function hosting_civicrm_ansible_node_load($nodes, $types) {
     // Disabled cron has a -1 value and the Ansible playbooks know how to handle this
     $node->civicrm_ansible_cron_interval = $result->civicrm_cron_interval ?: variable_get('hosting_civicrm_ansible_cron_default_interval', 900);
 
+    // Keys are generated in hosting_civicrm_ansible.nodeapi.inc
     $node->civicrm_ansible_cron_user = $result->civicrm_cron_user ?: '';
     $node->civicrm_ansible_sitekey = $result->civicrm_sitekey ?: '';
     $node->civicrm_ansible_credkey = $result->civicrm_credkey ?: '';
@@ -64,11 +65,6 @@ function hosting_civicrm_ansible_node_load($nodes, $types) {
     $node->civicrm_ansible_sftpchroot_keys = $result->sftpchroot_keys ?: '';
     $node->civicrm_ansible_mysqlro_keys = $result->mysqlro_keys ?: '';
     $node->civicrm_ansible_mysqlrw_keys = $result->mysqlrw_keys ?: '';
-
-    // @todo Generate new keys if empty? see what hosting_civicrm did
-    // CIVICRM_SITE_KEY
-    // CIVICRM_CRED_KEYS aes-cbc:hkdf-sha256:{{ (inventory_hostname + aegir_salt) | hash('sha256') }}'
-    // CIVICRM_SIGN_KEYS jwt-hs256:hkdf-sha256:{{ (inventory_hostname + aegir_salt) | hash('sha256')
   }
 }
 
