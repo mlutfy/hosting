@@ -240,6 +240,7 @@ function hosting_site_form($node, &$form_state) {
     '#title' => t('Install profile'),
     '#description' => t('The type of site to install.') . '<br />' . t('The profile selected here determines the list of supported platforms below.') . '<br>' . t('Only applies to Drupal'),
     '#options' => $profiles,
+    '#default_value' => isset($node->profile) ? $node->profile : NULL,
     '#required' => FALSE,
     '#attributes' => array('class' => array("hosting-site-form-profile-options")),
     '#ajax' => array(
