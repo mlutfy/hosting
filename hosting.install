@@ -8,6 +8,36 @@
 require_once(dirname(__FILE__) . '/hosting.module');
 
 /**
+ * Implements hook_install().
+ *
+ * Enable the modules that make up a working Aegir install. They are not
+ * declared as dependencies in hosting.info because they themselves depend on
+ * hosting, and the circular dependency makes the enable order arbitrary
+ * (hosting_platform can end up enabled before hosting.module is loaded).
+ */
+function hosting_install() {
+  $modules = [
+    // Required
+    'hosting_server',
+    'hosting_db_server',
+    'hosting_web_server',
+    'hosting_platform',
+    'hosting_site',
+    'hosting_task',
+    // Optional but recommended (can be uninstalled later on)
+    'hosting_migrate',
+    'hosting_clone',
+    'hosting_alias',
+    'hosting_nginx',
+    // Deprecated
+    // 'hosting_package',
+  ];
+  if (!module_enable($modules)) {
+    throw new Exception(t('Hosting: could not enable required modules. Missing: @missing', ['@missing' => implode(', ', array_unique($missing))]));
+  }
+}
+
+/**
  * Implements hook_uninstall().
  */
 function hosting_uninstall() {
