@@ -23,13 +23,11 @@ function hosting_remote_import_schema() {
         'type' => 'varchar',
         'length' => 255,
         'not null' => FALSE,
-        'default' => '',
       ),
       'platform' => array(
         'type' => 'varchar',
         'length' => 255,
         'not null' => TRUE,
-        'default' => NULL,
       ),
     ),
     'indexes' => array(
