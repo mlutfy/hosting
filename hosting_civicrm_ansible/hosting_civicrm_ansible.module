@@ -454,7 +454,12 @@ function hosting_civicrm_ansible_ansible_inventory_alter(&$inventory) {
   global $base_url;
   $inventory->all['vars']['aegir_frontend'] = preg_replace('#^https?://#', '', $base_url);
 
-  $usage_stats = function_exists('hosting_usage_get_data') ? hosting_usage_get_data() : NULL;
+  $usage_stats = [];
+  try {
+    $usage_stats = function_exists('hosting_usage_get_data') ? hosting_usage_get_data() : NULL;
+  }
+  catch (Throwable $ignore) {
+  }
 
   foreach ($site_nodes as $node) {
     // Remove the top-level domain name from the shortname
