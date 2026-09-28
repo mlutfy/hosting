@@ -1,0 +1,53 @@
+<?php
+/**
+ * @file
+ * Drupal module file for Aegir Ansible Inventory.
+ */
+
+/**
+ * Implements hook_menu();
+ * @return mixed
+ */
+function aegir_ansible_inventory_menu(){
+    $items['inventory'] = array(
+        'page callback' => 'aegir_ansible_inventory_endpoint',
+        'access callback' => TRUE,
+        'file' => 'inventory-endpoint.php',
+    );
+    return $items;
+}
+
+/**
+ * Implements hook_node_load().
+ */
+function aegir_ansible_inventory_node_load($nodes, $types) {
+    if (!in_array('server', $types)) {
+      return;
+    }
+
+    $name = 'server_master';
+
+    // Load host vars here.
+    foreach ($nodes as $nid => &$node) {
+        if ($node->type != 'server') {
+            continue;
+        }
+        if (empty($node->ansible_vars) || !is_array($node->ansible_vars)) {
+          $node->ansible_vars = array();
+        }
+        foreach ($node->services as $type => $service) {
+            if (isset($service->ansible_vars) && is_array($service->ansible_vars)) {
+                $node->ansible_vars = array_merge($node->ansible_vars, $service->ansible_vars);
+            }
+        }
+    }
+}
+
+/**
+ * Implements hook_form_FORM_ID_alter().
+ */
+function aegir_ansible_inventory_form_server_node_form_alter(&$form, &$form_state, $form_id) {
+    $form['note'] = array();
+    $form['key'] = array();
+    $form['title']['#description'] = t('The fully qualified hostname of the server you wish to add.');
+}
