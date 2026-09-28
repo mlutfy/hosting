@@ -24,6 +24,9 @@ function hosting_install() {
     'hosting_platform',
     'hosting_site',
     'hosting_task',
+    // These two should be merged eventually
+    'aegir_ansible_inventory',
+    'hosting_civicrm_ansible',
     // Optional but recommended (can be uninstalled later on)
     'hosting_migrate',
     'hosting_clone',
