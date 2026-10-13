@@ -556,7 +556,7 @@ function hosting_platform_insert($node) {
       'nid' => $node->nid,
       'publish_path' => hosting_path_normalize($node->publish_path),
       'software' => $node->software,
-      'phpversion' => $node->phpversion,
+      'phpversion' => $node->phpversion ?? NULL,
       'verified' => isset($node->verified) ? $node->verified : 0,
       'web_server' => $node->web_server,
       'status' => isset($node->platform_status) ? $node->platform_status : 0,
